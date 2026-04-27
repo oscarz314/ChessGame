@@ -7,7 +7,7 @@
 	objects = {
 
 /* Begin PBXFileReference section */
-		3F828C582F9BF136008C4E24 /* ChessGame.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = ChessGame.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		3F828C582F9BF136008C4E24 /* ChessGame.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; name = ChessGame.app; path = "/Users/student/Desktop/Zhang_PD_9/ChessGame/build/Debug-iphoneos/ChessGame.app"; sourceTree = "<absolute>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
@@ -33,16 +33,7 @@
 			isa = PBXGroup;
 			children = (
 				3F828C5A2F9BF136008C4E24 /* ChessGame */,
-				3F828C592F9BF136008C4E24 /* Products */,
 			);
-			sourceTree = "<group>";
-		};
-		3F828C592F9BF136008C4E24 /* Products */ = {
-			isa = PBXGroup;
-			children = (
-				3F828C582F9BF136008C4E24 /* ChessGame.app */,
-			);
-			name = Products;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -95,7 +86,7 @@
 			mainGroup = 3F828C4F2F9BF136008C4E24;
 			minimizedProjectReferenceProxies = 1;
 			preferredProjectObjectVersion = 77;
-			productRefGroup = 3F828C592F9BF136008C4E24 /* Products */;
+			productRefGroup = 3F828C4F2F9BF136008C4E24;
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
