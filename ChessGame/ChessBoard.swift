@@ -33,6 +33,7 @@ struct ChessBoard: View {
                                 }
                             }
                         }
+                        
                     }
                     .border(Color.black, width: 2)
                     .padding()
