@@ -21,6 +21,18 @@ struct ChessboardLogic {
         setupBoard()
     }
     
+    var activePieces: [(piece: ChessPiece, row: Int, col: Int)] {
+            var list: [(piece: ChessPiece, row: Int, col: Int)] = []
+            for row in 0..<8 {
+                for col in 0..<8 {
+                    if let piece = board[row][col] {
+                        list.append((piece, row, col))
+                    }
+                }
+            }
+            return list
+        }
+    
     mutating func setupBoard() {
         let backRow: [PieceType] = [
             .rook, .knight, .bishop, .queen,

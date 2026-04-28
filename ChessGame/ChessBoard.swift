@@ -12,6 +12,7 @@ struct ChessBoard: View {
     //Board size 8 by 8
     let size = 8
     
+    @State private var game = ChessboardLogic()
     //Test piece
     
     var body: some View {
@@ -21,7 +22,7 @@ struct ChessBoard: View {
                 let boardSize = min(geo.size.width, geo.size.height)
                 let squareSize = boardSize / CGFloat(size)
                 
-                ZStack{
+                ZStack(alignment: .topLeading) {
                     // Make grid
                     Grid(horizontalSpacing: 0, verticalSpacing: 0) {
                         ForEach(0..<size, id: \.self) { row in
@@ -36,7 +37,17 @@ struct ChessBoard: View {
                         
                     }
                     .border(Color.black, width: 2)
-                    .padding()
+                    
+                    ForEach(game.activePieces, id: \.piece.id) { item in
+                            Image(item.piece.imageName)
+                                .resizable()
+                                .scaledToFit()
+                                .frame(width: squareSize, height: squareSize)
+                                .position(
+                                    x: CGFloat(item.col) * squareSize + (squareSize / 2),
+                                    y: CGFloat(item.row) * squareSize + (squareSize / 2)
+                                )
+                        }
                 }
                 .frame(width: boardSize, height: boardSize)
             }
