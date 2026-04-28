@@ -50,6 +50,7 @@ struct ChessboardLogic {
     }
     
     mutating func move(from: (Int, Int), to: (Int, Int)) {
+        history.append(board)
         guard let piece = board[from.0][from.1] else { return }
         board[to.0][to.1] = piece
         board[from.0][from.1] = nil
