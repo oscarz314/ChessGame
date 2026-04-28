@@ -13,7 +13,10 @@ struct ChessBoard: View {
     let size = 8
     
     @State private var game = ChessboardLogic()
-    //Test piece
+
+    //Current piece
+    @State private var selectedPiece: (piece: ChessPiece, row: Int, col: Int)?
+    @State private var dragOffset: CGSize = .zero
     
     var body: some View {
         HStack{
@@ -38,16 +41,31 @@ struct ChessBoard: View {
                     }
                     .border(Color.black, width: 2)
                     
+                    //Pieces
                     ForEach(game.activePieces, id: \.piece.id) { item in
-                            Image(item.piece.imageName)
-                                .resizable()
-                                .scaledToFit()
-                                .frame(width: squareSize, height: squareSize)
-                                .position(
-                                    x: CGFloat(item.col) * squareSize + (squareSize / 2),
-                                    y: CGFloat(item.row) * squareSize + (squareSize / 2)
-                                )
-                        }
+                        let isSelected = selectedPiece?.piece.id == item.piece.id
+                        
+                        Image(item.piece.imageName)
+                            .resizable()
+                            .scaledToFit()
+                            .frame(width: squareSize, height: squareSize)
+                            .position(
+                                x: CGFloat(item.col) * squareSize + (squareSize / 2) + (isSelected ? dragOffset.width : 0),
+                                y: CGFloat(item.row) * squareSize + (squareSize / 2) + (isSelected ? dragOffset.height : 0)
+                            )
+                            .gesture(
+                                DragGesture()
+                                    .onChanged { value in
+                                        selectedPiece = item
+                                        dragOffset = value.translation
+                                    }
+                                    .onEnded { value in
+                                        handleDrop(item: item, translation: value.translation, squareSize: squareSize)
+                                        dragOffset = .zero
+                                        selectedPiece = nil
+                                    }
+                            )
+                    }
                 }
                 .frame(width: boardSize, height: boardSize)
             }
@@ -60,6 +78,23 @@ struct ChessBoard: View {
     func isDark(row: Int, col: Int) -> Bool {
             return (row + col) % 2 != 0
         }
+    
+    //Drag and drop pieces
+    func handleDrop(item: (piece: ChessPiece, row: Int, col: Int),
+                    translation: CGSize,
+                    squareSize: CGFloat) {
+        
+        let colChange = Int((translation.width / squareSize).rounded())
+        let rowChange = Int((translation.height / squareSize).rounded())
+        
+        let newRow = item.row + rowChange
+        let newCol = item.col + colChange
+        
+        // Stay inside board
+        guard (0..<8).contains(newRow), (0..<8).contains(newCol) else { return }
+        
+        game.move(from: (item.row, item.col), to: (newRow, newCol))
+    }
 }
 
 #Preview {

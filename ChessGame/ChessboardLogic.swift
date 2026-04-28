@@ -17,6 +17,8 @@ struct ChessboardLogic {
         count: 8
     )
     
+    var history: [Board] = []
+    
     init() {
         setupBoard()
     }
