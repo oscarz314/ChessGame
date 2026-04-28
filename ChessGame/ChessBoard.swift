@@ -91,6 +91,8 @@ struct ChessBoard: View {
         let newCol = item.col + colChange
         
         // Stay inside board
+        guard newRow != item.row || newCol != item.col else { return }
+
         guard (0..<8).contains(newRow), (0..<8).contains(newCol) else { return }
         
         game.move(from: (item.row, item.col), to: (newRow, newCol))
