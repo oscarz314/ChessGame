@@ -20,6 +20,7 @@ struct ChessboardLogic {
     var currentTurn: PieceColor = .white
     
     var history: [Board] = []
+    var moveNum: Int = 0
     
     init() {
         setupBoard()
