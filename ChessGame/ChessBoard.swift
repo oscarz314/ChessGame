@@ -11,7 +11,8 @@ import SwiftUI
 struct ChessBoard: View {
     //Board size 8 by 8
     let size = 8
-    
+    @State private var showingPromotionSelection = false
+    @State private var pendingPromotion: (from: (row: Int, col: Int), to: (row: Int, col: Int))?
     @State private var game = ChessboardLogic()
     
     //Current piece
@@ -79,6 +80,13 @@ struct ChessBoard: View {
                 .padding()
             }
         }
+        .confirmationDialog("Promote Pawn", isPresented: $showingPromotionSelection, titleVisibility: .visible) {
+            Button("Queen") { promote(to: .queen) }
+            Button("Knight") { promote(to: .knight) }
+            Button("Rook") { promote(to: .rook) }
+            Button("Bishop") { promote(to: .bishop) }
+            Button("Cancel", role: .cancel) { pendingPromotion = nil }
+        }
     }
         
         //Decide which square is dark
@@ -98,12 +106,25 @@ struct ChessBoard: View {
             let newCol = item.col + colChange
             
             // Stay inside board
+            guard (0..<8).contains(newRow), (0..<8).contains(newCol) else { return }
             guard newRow != item.row || newCol != item.col else { return }
             
-            guard (0..<8).contains(newRow), (0..<8).contains(newCol) else { return }
-            
+            if item.piece.type == .pawn && (newRow == 0 || newRow == 7) {
+                pendingPromotion = (from: (item.row, item.col), to: (newRow, newCol))
+                showingPromotionSelection = true
+            } else {
+                game.move(from: (item.row, item.col), to: (newRow, newCol))
+            }
+                        
             game.move(from: (item.row, item.col), to: (newRow, newCol))
         
+    }
+    
+    func promote(to type: PieceType) {
+        if let move = pendingPromotion {
+            game.moveAndPromote(from: move.from, to: move.to, promoteTo: type)
+        }
+        pendingPromotion = nil
     }
 }
 
