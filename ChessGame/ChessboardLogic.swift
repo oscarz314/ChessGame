@@ -65,6 +65,51 @@ struct ChessboardLogic {
         //Switch the turn
         currentTurn = (currentTurn == .white) ? .black : .white
     }
+    
+    func isLegal(row: Int, col:Int){
+        if(board[row][col]?.type == .pawn){
+            
+        }
+        else if(board[row][col]?.type == .bishop){
+            
+        }
+        else if(board[row][col]?.type == .knight){
+            
+        }
+        else if(board[row][col]?.type == .rook){
+            
+        }
+        if(board[row][col]?.type == .queen){
+            
+        }
+        else{
+            
+        }
+    }
+    
+    func islegalPawn(row: Int, col:Int) -> [[(Int, Int)]] {
+        return [[(0, 0)]]
+    }
+    
+    func islegalBishop(row: Int, col:Int)-> [[(Int, Int)]] {
+        return [[(0, 0)]]
+    }
+    
+    func islegaKnight(row: Int, col:Int)-> [[(Int, Int)]] {
+        return [[(0, 0)]]
+    }
+    
+    func islegalRook(row: Int, col:Int)-> [[(Int, Int)]] {
+        return [[(0, 0)]]
+    }
+    
+    func islegalQueen(row: Int, col:Int)-> [[(Int, Int)]] {
+        return [[(0, 0)]]
+    }
+    
+    func islegalKing(row: Int, col:Int)-> [[(Int, Int)]] {
+        return [[(0, 0)]]
+    }
 }
 
 
