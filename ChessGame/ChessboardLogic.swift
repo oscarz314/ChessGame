@@ -87,8 +87,24 @@ struct ChessboardLogic {
         }
     }
     
-    func islegalPawn(row: Int, col:Int) -> [[(Int, Int)]] {
-        return [[(0, 0)]]
+    func islegalPawn(row: Int, col:Int) -> [(Int, Int)] {
+        var legalMoves: [(Int, Int)] = []
+        let currentPiece = board[row][col]
+
+        // Check if can move twice else check once
+        if (currentPiece?.color == .white && row == 6){
+            if(board[row - 2][col] == nil){
+                legalMoves.append((row - 2, col))
+            }
+        }
+        
+        if(board[row - 1][col] == nil){
+            legalMoves.append((row - 1, col))
+        }
+        
+        //Check if can capture sideways
+        
+        return legalMoves
     }
     
     func islegalBishop(row: Int, col:Int)-> [[(Int, Int)]] {
