@@ -17,6 +17,8 @@ struct ChessboardLogic {
         count: 8
     )
     
+    var currentTurn: PieceColor = .white
+    
     var history: [Board] = []
     
     init() {
@@ -50,10 +52,17 @@ struct ChessboardLogic {
     }
     
     mutating func move(from: (Int, Int), to: (Int, Int)) {
-        history.append(board)
         guard let piece = board[from.0][from.1] else { return }
+        
+        //only move if the piece color matches the turn
+        guard piece.color == currentTurn else {return}
+        
+        history.append(board)
         board[to.0][to.1] = piece
         board[from.0][from.1] = nil
+        
+        //Switch the turn
+        currentTurn = (currentTurn == .white) ? .black : .white
     }
 }
 
