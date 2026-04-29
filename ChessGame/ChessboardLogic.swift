@@ -18,6 +18,7 @@ struct ChessboardLogic {
     )
     
     var history: [Board] = []
+    var moveNum: Int = 0
     
     init() {
         setupBoard()
