@@ -66,23 +66,65 @@ struct ChessboardLogic {
         currentTurn = (currentTurn == .white) ? .black : .white
     }
     
-    mutating func moveAndPromote(from: (Int, Int), to: (Int, Int), promoteTo: PieceType) {
-        guard let piece = board[from.0][from.1] else {return}
+    func isLegal(row: Int, col:Int){
+        if(board[row][col]?.type == .pawn){
+            
+        }
+        else if(board[row][col]?.type == .bishop){
+            
+        }
+        else if(board[row][col]?.type == .knight){
+            
+        }
+        else if(board[row][col]?.type == .rook){
+            
+        }
+        if(board[row][col]?.type == .queen){
+            
+        }
+        else{
+            
+        }
+    }
+    
+    func islegalPawn(row: Int, col:Int) -> [(Int, Int)] {
+        var legalMoves: [(Int, Int)] = []
+        let currentPiece = board[row][col]
+
+        // Check if can move twice else check once
+        if (currentPiece?.color == .white && row == 6){
+            if(board[row - 2][col] == nil){
+                legalMoves.append((row - 2, col))
+            }
+        }
         
-        guard piece.color == currentTurn else {return}
+        if(board[row - 1][col] == nil){
+            legalMoves.append((row - 1, col))
+        }
         
-        history.append(board)
+        //Check if can capture sideways
         
-        //Create New Piece
-        let promotedPiece = ChessPiece(type: promoteTo, color: piece.color)
-        
-        //Place the new piece at the destination
-        board[to.0][to.1] = promotedPiece
-        
-        //Clear the piece from starting position
-        board[from.0][from.1] = nil
-        
-        currentTurn = (currentTurn == .white) ? .black : .white
+        return legalMoves
+    }
+    
+    func islegalBishop(row: Int, col:Int)-> [[(Int, Int)]] {
+        return [[(0, 0)]]
+    }
+    
+    func islegaKnight(row: Int, col:Int)-> [[(Int, Int)]] {
+        return [[(0, 0)]]
+    }
+    
+    func islegalRook(row: Int, col:Int)-> [[(Int, Int)]] {
+        return [[(0, 0)]]
+    }
+    
+    func islegalQueen(row: Int, col:Int)-> [[(Int, Int)]] {
+        return [[(0, 0)]]
+    }
+    
+    func islegalKing(row: Int, col:Int)-> [[(Int, Int)]] {
+        return [[(0, 0)]]
     }
 }
 
