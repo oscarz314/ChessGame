@@ -143,11 +143,71 @@ struct ChessboardLogic {
     
     func islegalRook(row: Int, col:Int)-> [(Int, Int)] {
         var legalMoves: [(Int, Int)] = []
+        guard let piece = board[row][col] else { return [] }
+        
+        // RIGHT
+        var c = col + 1
+        while c < 8 {
+            if let target = board[row][c] {
+                if target.color != piece.color {
+                    legalMoves.append((row, c))
+                }
+                break
+            }
+            legalMoves.append((row, c))
+            c += 1
+        }
+        
+        // LEFT
+        c = col - 1
+        while c >= 0 {
+            if let target = board[row][c] {
+                if target.color != piece.color {
+                    legalMoves.append((row, c))
+                }
+                break
+            }
+            legalMoves.append((row, c))
+            c -= 1
+        }
+        
+        // DOWN
+        var r = row + 1
+        while r < 8 {
+            if let target = board[r][col] {
+                if target.color != piece.color {
+                    legalMoves.append((r, col))
+                }
+                break
+            }
+            legalMoves.append((r, col))
+            r += 1
+        }
+        
+        // UP
+        r = row - 1
+        while r >= 0 {
+            if let target = board[r][col] {
+                if target.color != piece.color {
+                    legalMoves.append((r, col))
+                }
+                break
+            }
+            legalMoves.append((r, col))
+            r -= 1
+        }
+        
         return legalMoves
     }
     
     func islegalQueen(row: Int, col:Int)-> [(Int, Int)] {
-        var legalMoves: [(Int, Int)] = []
+        
+        var legalMovesRook = islegalRook(row: row, col: col)
+        var legalMovesBishop = islegalBishop(row: row, col: col)
+        
+        // Queen's movment = rook moves + bishop moves
+        let legalMoves = legalMovesRook + legalMovesBishop
+        
         return legalMoves
     }
     
