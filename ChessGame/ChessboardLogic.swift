@@ -53,17 +53,30 @@ struct ChessboardLogic {
     }
     
     mutating func move(from: (Int, Int), to: (Int, Int)) {
-        guard let piece = board[from.0][from.1] else { return }
+        let legalMoves = isLegal(row: to.0, col: to.1)
+        var moveIsLegal = false
         
-        //only move if the piece color matches the turn
-        guard piece.color == currentTurn else {return}
+        for moves in legalMoves{
+            if (to == moves){
+                moveIsLegal = true
+            }
+        }
         
-        history.append(board)
-        board[to.0][to.1] = piece
-        board[from.0][from.1] = nil
         
-        //Switch the turn
-        currentTurn = (currentTurn == .white) ? .black : .white
+        if(moveIsLegal){
+            // Update board, history moves,
+            guard let piece = board[from.0][from.1] else { return }
+            
+            //only move if the piece color matches the turn
+            guard piece.color == currentTurn else {return}
+            
+            history.append(board)
+            board[to.0][to.1] = piece
+            board[from.0][from.1] = nil
+            
+            //Switch the turn
+            currentTurn = (currentTurn == .white) ? .black : .white
+        }
     }
     
     func isLegal(row: Int, col:Int) -> [(Int, Int)]{
