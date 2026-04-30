@@ -90,19 +90,36 @@ struct ChessboardLogic {
     func islegalPawn(row: Int, col:Int) -> [(Int, Int)] {
         var legalMoves: [(Int, Int)] = []
         let currentPiece = board[row][col]
+        var moveDirection: Int
 
+        //Determine move direction
+        if (currentPiece?.color == .white){
+            moveDirection = 1
+        }
+        else{
+            moveDirection = -1
+        }
+        
         // Check if can move twice else check once
-        if (currentPiece?.color == .white && row == 6){
-            if(board[row - 2][col] == nil){
-                legalMoves.append((row - 2, col))
+        if (row == 6 || row == 1){
+            if(board[row - (2 * moveDirection)][col] == nil){
+                legalMoves.append((row - (2 * moveDirection), col))
             }
         }
         
-        if(board[row - 1][col] == nil){
-            legalMoves.append((row - 1, col))
+        // Check moving forwards
+        if(board[row - (1 * moveDirection)][col] == nil){
+            legalMoves.append((row - (1 * moveDirection), col))
         }
         
-        //Check if can capture sideways
+        // Check if can capture sideways
+        if(col + 1 <= 8 && board[row - (1 * moveDirection)][col + 1] != nil){ // Check right side
+            legalMoves.append((row - (1 * moveDirection), col))
+        }
+        
+        if(col - 1 >= 0 && board[row - (1 * moveDirection)][col - 1] != nil){ // Check left side
+            legalMoves.append((row - (1 * moveDirection), col))
+        }
         
         return legalMoves
     }
