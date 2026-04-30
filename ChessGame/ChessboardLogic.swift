@@ -66,25 +66,32 @@ struct ChessboardLogic {
         currentTurn = (currentTurn == .white) ? .black : .white
     }
     
-    func isLegal(row: Int, col:Int){
+    func isLegal(row: Int, col:Int) -> [(Int, Int)]{
+        var legalMoves: [(Int, Int)] = []
+        
+        // Check which legal moves
         if(board[row][col]?.type == .pawn){
-            
+            legalMoves = islegalPawn(row: row, col: col)
         }
         else if(board[row][col]?.type == .bishop){
-            
+            legalMoves = islegalBishop(row: row, col: col)
         }
         else if(board[row][col]?.type == .knight){
-            
+            legalMoves = islegalKnight(row: row, col: col)
         }
         else if(board[row][col]?.type == .rook){
-            
+            legalMoves = islegalRook(row: row, col: col)
         }
         if(board[row][col]?.type == .queen){
-            
+            legalMoves = islegalQueen(row: row, col: col)
         }
         else{
-            
+            legalMoves = islegalKing(row: row, col: col)
         }
+        
+        // Check if king is in check
+        
+        return legalMoves
     }
     
     func islegalPawn(row: Int, col:Int) -> [(Int, Int)] {
@@ -124,24 +131,29 @@ struct ChessboardLogic {
         return legalMoves
     }
     
-    func islegalBishop(row: Int, col:Int)-> [[(Int, Int)]] {
-        return [[(0, 0)]]
+    func islegalBishop(row: Int, col:Int)-> [(Int, Int)] {
+        var legalMoves: [(Int, Int)] = []
+        return legalMoves
     }
     
-    func islegaKnight(row: Int, col:Int)-> [[(Int, Int)]] {
-        return [[(0, 0)]]
+    func islegalKnight(row: Int, col:Int)-> [(Int, Int)] {
+        var legalMoves: [(Int, Int)] = []
+        return legalMoves
     }
     
-    func islegalRook(row: Int, col:Int)-> [[(Int, Int)]] {
-        return [[(0, 0)]]
+    func islegalRook(row: Int, col:Int)-> [(Int, Int)] {
+        var legalMoves: [(Int, Int)] = []
+        return legalMoves
     }
     
-    func islegalQueen(row: Int, col:Int)-> [[(Int, Int)]] {
-        return [[(0, 0)]]
+    func islegalQueen(row: Int, col:Int)-> [(Int, Int)] {
+        var legalMoves: [(Int, Int)] = []
+        return legalMoves
     }
     
-    func islegalKing(row: Int, col:Int)-> [[(Int, Int)]] {
-        return [[(0, 0)]]
+    func islegalKing(row: Int, col:Int) -> [(Int, Int)] {
+        var legalMoves: [(Int, Int)] = []
+        return legalMoves
     }
 }
 
