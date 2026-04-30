@@ -110,19 +110,20 @@ struct ChessBoard: View {
             guard newRow != item.row || newCol != item.col else { return }
             
             if item.piece.type == .pawn && (newRow == 0 || newRow == 7) {
-                pendingPromotion = (from: (item.row, item.col), to: (newRow, newCol))
+                game.move(from: (item.row, item.col), to: (newRow, newCol))
+                
+                pendingPromotion = (from: (newRow, newCol), to: (newRow, newCol))
                 showingPromotionSelection = true
             } else {
                 game.move(from: (item.row, item.col), to: (newRow, newCol))
             }
                         
-            game.move(from: (item.row, item.col), to: (newRow, newCol))
         
     }
     
     func promote(to type: PieceType) {
         if let move = pendingPromotion {
-            game.moveAndPromote(from: move.from, to: move.to, promoteTo: type)
+            game.board[move.to.row][move.to.col] = ChessPiece(type: type, color: game.currentTurn == .white ? .black : .white)
         }
         pendingPromotion = nil
     }

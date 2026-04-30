@@ -80,7 +80,7 @@ struct ChessboardLogic {
         board[to.0][to.1] = promotedPiece
         
         //Clear the piece from starting position
-        board[to.0][to.1] = nil
+        board[from.0][from.1] = nil
         
         currentTurn = (currentTurn == .white) ? .black : .white
     }
