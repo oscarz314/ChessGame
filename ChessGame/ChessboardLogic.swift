@@ -53,58 +53,40 @@ struct ChessboardLogic {
     }
     
     mutating func move(from: (Int, Int), to: (Int, Int)) {
-        let legalMoves = isLegal(row: to.0, col: to.1)
-        var moveIsLegal = false
+        guard let piece = board[from.0][from.1] else { return }
         
-        for moves in legalMoves{
-            if (to == moves){
-                moveIsLegal = true
-            }
-        }
+        // Only move if correct turn
+        guard piece.color == currentTurn else { return }
         
+        let legalMoves = isLegal(row: from.0, col: from.1)
         
-        if(moveIsLegal){
-            // Update board, history moves,
-            guard let piece = board[from.0][from.1] else { return }
-            
-            //only move if the piece color matches the turn
-            guard piece.color == currentTurn else {return}
-            
+        if legalMoves.contains(where: { $0 == to }) {
             history.append(board)
+            
             board[to.0][to.1] = piece
             board[from.0][from.1] = nil
             
-            //Switch the turn
             currentTurn = (currentTurn == .white) ? .black : .white
         }
     }
     
-    func isLegal(row: Int, col:Int) -> [(Int, Int)]{
-        var legalMoves: [(Int, Int)] = []
+    func isLegal(row: Int, col: Int) -> [(Int, Int)] {
+        guard let piece = board[row][col] else { return [] }
         
-        // Check which legal moves
-        if(board[row][col]?.type == .pawn){
-            legalMoves = islegalPawn(row: row, col: col)
+        switch piece.type {
+        case .pawn:
+            return islegalPawn(row: row, col: col)
+        case .bishop:
+            return islegalBishop(row: row, col: col)
+        case .knight:
+            return islegalKnight(row: row, col: col)
+        case .rook:
+            return islegalRook(row: row, col: col)
+        case .queen:
+            return islegalQueen(row: row, col: col)
+        case .king:
+            return islegalKing(row: row, col: col)
         }
-        else if(board[row][col]?.type == .bishop){
-            legalMoves = islegalBishop(row: row, col: col)
-        }
-        else if(board[row][col]?.type == .knight){
-            legalMoves = islegalKnight(row: row, col: col)
-        }
-        else if(board[row][col]?.type == .rook){
-            legalMoves = islegalRook(row: row, col: col)
-        }
-        if(board[row][col]?.type == .queen){
-            legalMoves = islegalQueen(row: row, col: col)
-        }
-        else{
-            legalMoves = islegalKing(row: row, col: col)
-        }
-        
-        // Check if king is in check
-        
-        return legalMoves
     }
     
     func islegalPawn(row: Int, col:Int) -> [(Int, Int)] {
