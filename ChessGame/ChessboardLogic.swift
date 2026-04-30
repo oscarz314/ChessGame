@@ -57,11 +57,10 @@ struct ChessboardLogic {
         var moveIsLegal = false
         
         for moves in legalMoves{
-            if (to == moves){
+            if (from == moves){
                 moveIsLegal = true
             }
         }
-        
         
         if(moveIsLegal){
             // Update board, history moves,
