@@ -125,10 +125,12 @@ struct ChessboardLogic {
     }
     
     func islegalBishop(row: Int, col:Int)-> [[(Int, Int)]] {
+        
         return [[(0, 0)]]
     }
     
     func islegaKnight(row: Int, col:Int)-> [[(Int, Int)]] {
+        
         return [[(0, 0)]]
     }
     
@@ -143,6 +145,24 @@ struct ChessboardLogic {
     func islegalKing(row: Int, col:Int)-> [[(Int, Int)]] {
         return [[(0, 0)]]
     }
+    
+    mutating func moveAndPromote(from: (Int, Int), to: (Int, Int), promoteTo: PieceType) {
+            guard let piece = board[from.0][from.1] else { return }
+            
+            guard piece.color == currentTurn else { return }
+            
+            history.append(board)
+            
+            let promotedPiece = ChessPiece(type: promoteTo, color: piece.color)
+            
+            // Place the new piece at the destination
+            board[to.0][to.1] = promotedPiece
+            
+            // Clear the starting position
+            board[from.0][from.1] = nil
+            
+            currentTurn = (currentTurn == .white) ? .black : .white
+        }
 }
 
 
