@@ -256,6 +256,25 @@ struct ChessboardLogic {
     
     func islegalKing(row: Int, col:Int) -> [(Int, Int)] {
         var legalMoves: [(Int, Int)] = []
+        let currentPiece = board[row][col]
+        
+        for dRow in -1...1 {
+                for dCol in -1...1 {
+                    // Skip the current square
+                    if dRow == 0 && dCol == 0 { continue }
+                    
+                    let newRow = row + dRow
+                    let newCol = col + dCol
+                    
+                    // Check bounds (0 to 7)
+                    if newRow >= 0 && newRow < 8 && newCol >= 0 && newCol < 8 {
+                        if board[newRow][newCol]?.color != currentPiece?.color {
+                            legalMoves.append((newRow, newCol))
+                        }
+                    }
+                }
+            }
+        
         return legalMoves
     }
     
