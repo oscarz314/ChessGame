@@ -128,11 +128,60 @@ struct ChessboardLogic {
     
     func islegalBishop(row: Int, col:Int)-> [(Int, Int)] {
         var legalMoves: [(Int, Int)] = []
+        guard let piece = board[row][col] else { return [] }
+        
+        //4 diagonal directions: (row change, col change)
+        let directions = [(-1,-1), (-1,1), (1,-1), (1,1)]
+        
+        for dir in directions {
+            var nextRow = row + dir.0
+            var nextCol = col + dir.1
+            
+            while (0..<8).contains(nextRow) && (0..<8).contains(nextCol) {
+                if let targetPiece = board[nextRow][nextCol] {
+                    if (targetPiece.color != piece.color) {
+                        legalMoves.append((nextRow, nextCol))
+                    }
+                    //if we hit any piece, we can't slide further
+                    break
+                } else {
+                    legalMoves.append((nextRow, nextCol))
+                    nextRow += dir.0
+                    nextCol += dir.1
+                }
+            }
+            return legalMoves
+        }
+        
         return legalMoves
     }
     
     func islegalKnight(row: Int, col:Int)-> [(Int, Int)] {
         var legalMoves: [(Int, Int)] = []
+        guard let piece = board[row][col] else { return [] }
+        
+        // 8 possible L-shapes the knight can make
+        let offsets = [
+            (-2, -1), (-2,1),
+            (2,-1), (2,1),
+            (-1,-2), (1,-2),
+            (-1,2), (1,2)
+        ]
+        
+        for offset in offsets {
+            let nextRow = row + offset.0
+            let nextCol = col + offset.1
+            
+            if (0..<8).contains(nextRow) && (0..<8).contains(nextCol) {
+                if let targetPiece = board[nextRow][nextCol] {
+                    if targetPiece.color != piece.color {
+                        legalMoves.append((nextRow, nextCol))
+                    }
+                } else {
+                    legalMoves.append((nextRow, nextCol))
+                }
+            }
+        }
         return legalMoves
     }
     
