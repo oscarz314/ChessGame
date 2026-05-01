@@ -119,7 +119,7 @@ struct ChessboardLogic {
             legalMoves.append((row - (1 * moveDirection), col + 1))
         }
         
-        if(col - 1 >= 0 && board[row - (1 * moveDirection)][col - 1] != nil && board[row - (1 * moveDirection)][col + 1]?.color != currentPiece?.color){ // Check left side
+        if(col - 1 >= 0 && board[row - (1 * moveDirection)][col - 1] != nil && board[row - (1 * moveDirection)][col - 1]?.color != currentPiece?.color){ // Check left side
             legalMoves.append((row - (1 * moveDirection), col - 1))
         }
         
