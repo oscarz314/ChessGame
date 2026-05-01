@@ -115,7 +115,7 @@ struct ChessboardLogic {
         }
         
         // Check if can capture sideways
-        if(col + 1 <= 8 && board[row - (1 * moveDirection)][col + 1] != nil){ // Check right side
+        if(col + 1 <= 7 && board[row - (1 * moveDirection)][col + 1] != nil){ // Check right side
             legalMoves.append((row - (1 * moveDirection), col))
         }
         

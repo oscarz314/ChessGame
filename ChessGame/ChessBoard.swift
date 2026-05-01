@@ -19,6 +19,11 @@ struct ChessBoard: View {
     @State private var selectedPiece: (piece: ChessPiece, row: Int, col: Int)?
     @State private var dragOffset: CGSize = .zero
     
+    var legalMovesForSelected: [(Int, Int)] {
+        guard let selected = selectedPiece else { return [] }
+        return game.isLegal(row: selected.row, col: selected.col)
+    }
+    
     var body: some View {
         VStack {
             Text("Current Turn: \(game.currentTurn.rawValue.capitalized)")
@@ -36,6 +41,26 @@ struct ChessBoard: View {
                                     ForEach(0..<size, id: \.self) { column in
                                         Rectangle()
                                             .fill(isDark(row: row, col: column) ? Color.green : Color.white)
+                                            .overlay(
+                                                ZStack {
+                                                    // Selected square highlight
+                                                    if selectedPiece?.row == row && selectedPiece?.col == column {
+                                                        Color.blue.opacity(0.4)
+                                                    }
+                                                    
+                                                    // Legal move highlight
+                                                    if legalMovesForSelected.contains(where: { $0 == (row, column) }) {
+                                                        Circle()
+                                                            .fill(Color.blue)
+                                                            .frame(width: 20, height: 20)
+
+                                                    }
+                                                }
+                                            )
+                                            .onTapGesture {
+                                                handleTapMove(row: row, col: column)
+                                            }
+                                        
                                             .aspectRatio(1, contentMode: .fit)
                                     }
                                 }
@@ -56,6 +81,12 @@ struct ChessBoard: View {
                                     x: CGFloat(item.col) * squareSize + (squareSize / 2) + (isSelected ? dragOffset.width : 0),
                                     y: CGFloat(item.row) * squareSize + (squareSize / 2) + (isSelected ? dragOffset.height : 0)
                                 )
+                                .onTapGesture {
+                                    if (item.piece.color == game.currentTurn) {
+                                        selectedPiece = item
+                                    }
+                                    handleTapMove(row: item.row, col: item.col)
+                                }
                                 .gesture(
                                     DragGesture()
                                         .onChanged { value in
@@ -72,6 +103,7 @@ struct ChessBoard: View {
                                             }
                                         }
                                 )
+                                
                         }
                     }
                     .frame(width: boardSize, height: boardSize)
@@ -119,6 +151,40 @@ struct ChessBoard: View {
             }
                         
         
+    }
+    
+    func handleTapMove(row: Int, col: Int) {
+        
+        // If a piece is already selected → try to move
+        if let selected = selectedPiece {
+            
+            let legalMoves = game.isLegal(row: selected.row, col: selected.col)
+            
+            // If tapped square is a legal move → move
+            if legalMoves.contains(where: { $0 == (row, col) }) {
+                game.move(from: (selected.row, selected.col), to: (row, col))
+                selectedPiece = nil
+                return
+            }
+            
+            // If tapping another piece of same color → switch selection
+            if let newPiece = game.board[row][col],
+               newPiece.color == game.currentTurn {
+                selectedPiece = (newPiece, row, col)
+                return
+            }
+            
+            // Otherwise deselect
+            selectedPiece = nil
+        }
+        
+        // If nothing selected → select piece
+        else {
+            if let piece = game.board[row][col],
+               piece.color == game.currentTurn {
+                selectedPiece = (piece, row, col)
+            }
+        }
     }
     
     func promote(to type: PieceType) {
