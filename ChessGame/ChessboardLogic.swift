@@ -150,7 +150,6 @@ struct ChessboardLogic {
                     nextCol += dir.1
                 }
             }
-            return legalMoves
         }
         
         return legalMoves
