@@ -22,6 +22,9 @@ struct ChessboardLogic {
     var history: [Board] = []
     var moveNum: Int = 0
     
+    //Property to keep track the previous move for highlighting
+    var lastMove: (from: (Int, Int), to: (Int, Int))?
+    
     init() {
         setupBoard()
     }
@@ -53,23 +56,25 @@ struct ChessboardLogic {
     }
     
     mutating func move(from: (Int, Int), to: (Int, Int)) {
-        guard let piece = board[from.0][from.1] else { return }
-        
-        // Only move if correct turn
-        guard piece.color == currentTurn else { return }
-        
-        let legalMoves = isLegal(row: from.0, col: from.1)
-        
-        if legalMoves.contains(where: { $0 == to }) {
-            history.append(board)
+            guard let piece = board[from.0][from.1] else { return }
             
-            board[to.0][to.1] = piece
-            board[from.0][from.1] = nil
+            // Only move if correct turn
+            guard piece.color == currentTurn else { return }
             
-            currentTurn = (currentTurn == .white) ? .black : .white
+            let legalMoves = isLegal(row: from.0, col: from.1)
+            
+            if legalMoves.contains(where: { $0 == to }) {
+                history.append(board)
+                
+                lastMove = (from, to)
+                
+                board[to.0][to.1] = piece
+                board[from.0][from.1] = nil
+                
+                currentTurn = (currentTurn == .white) ? .black : .white
+            }
         }
-    }
-    
+
     func isLegal(row: Int, col: Int) -> [(Int, Int)] {
         guard let piece = board[row][col] else { return [] }
         
