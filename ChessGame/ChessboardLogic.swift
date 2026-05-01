@@ -58,7 +58,9 @@ struct ChessboardLogic {
         // Only move if correct turn
         guard piece.color == currentTurn else { return }
         
-        let legalMoves = isLegal(row: from.0, col: from.1)
+        // check for legal moves and if is check safe
+        var legalMoves = isLegal(row: from.0, col: from.1)
+        legalMoves = isCheckSafe(legalMoves: legalMoves)
         
         if legalMoves.contains(where: { $0 == to }) {
             history.append(board)
@@ -87,6 +89,20 @@ struct ChessboardLogic {
         case .king:
             return islegalKing(row: row, col: col)
         }
+    }
+    
+    func isCheckSafe (legalMoves: [(Int, Int)]) -> [(Int, Int)]{
+        var checkSafe = legalMoves
+        
+        for (row, rowArray) in board.enumerated() {
+            for (col, piece) in rowArray.enumerated() {
+                if let piece = piece {
+                    // use piece, row, col
+                }
+            }
+        }
+        
+        return checkSafe
     }
     
     func islegalPawn(row: Int, col:Int) -> [(Int, Int)] {
