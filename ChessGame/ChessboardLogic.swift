@@ -115,12 +115,12 @@ struct ChessboardLogic {
         }
         
         // Check if can capture sideways
-        if(col + 1 <= 8 && board[row - (1 * moveDirection)][col + 1] != nil){ // Check right side
-            legalMoves.append((row - (1 * moveDirection), col))
+        if(col + 1 <= 7 && board[row - (1 * moveDirection)][col + 1] != nil && board[row - (1 * moveDirection)][col + 1]?.color != currentPiece?.color){ // Check right side
+            legalMoves.append((row - (1 * moveDirection), col + 1))
         }
         
-        if(col - 1 >= 0 && board[row - (1 * moveDirection)][col - 1] != nil){ // Check left side
-            legalMoves.append((row - (1 * moveDirection), col))
+        if(col - 1 >= 0 && board[row - (1 * moveDirection)][col - 1] != nil && board[row - (1 * moveDirection)][col + 1]?.color != currentPiece?.color){ // Check left side
+            legalMoves.append((row - (1 * moveDirection), col - 1))
         }
         
         return legalMoves
