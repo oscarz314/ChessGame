@@ -354,4 +354,6 @@ struct ChessboardLogic {
             currentTurn = (currentTurn == .white) ? .black : .white
         }
     }
+    
+
 }
