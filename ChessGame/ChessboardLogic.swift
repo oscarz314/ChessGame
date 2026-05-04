@@ -30,16 +30,16 @@ struct ChessboardLogic {
     }
     
     var activePieces: [(piece: ChessPiece, row: Int, col: Int)] {
-            var list: [(piece: ChessPiece, row: Int, col: Int)] = []
-            for row in 0..<8 {
-                for col in 0..<8 {
-                    if let piece = board[row][col] {
-                        list.append((piece, row, col))
-                    }
+        var list: [(piece: ChessPiece, row: Int, col: Int)] = []
+        for row in 0..<8 {
+            for col in 0..<8 {
+                if let piece = board[row][col] {
+                    list.append((piece, row, col))
                 }
             }
-            return list
         }
+        return list
+    }
     
     mutating func setupBoard() {
         let backRow: [PieceType] = [
@@ -73,7 +73,26 @@ struct ChessboardLogic {
             
             currentTurn = (currentTurn == .white) ? .black : .white
         }
-
+    }
+    
+    mutating func moveAndPromote(from: (Int, Int), to: (Int, Int), promoteTo: PieceType) {
+        guard let piece = board[from.0][from.1] else { return }
+        
+        guard piece.color == currentTurn else { return }
+        
+        history.append(board)
+        
+        let promotedPiece = ChessPiece(type: promoteTo, color: piece.color)
+        
+        // Place the new piece at the destination
+        board[to.0][to.1] = promotedPiece
+        
+        // Clear the starting position
+        board[from.0][from.1] = nil
+        
+        currentTurn = (currentTurn == .white) ? .black : .white
+    }
+    
     func isLegal(row: Int, col: Int) -> [(Int, Int)] {
         guard let piece = board[row][col] else { return [] }
         
@@ -111,7 +130,7 @@ struct ChessboardLogic {
         var legalMoves: [(Int, Int)] = []
         let currentPiece = board[row][col]
         var moveDirection: Int
-
+        
         //Determine move direction
         if (currentPiece?.color == .white){
             moveDirection = 1
@@ -277,42 +296,26 @@ struct ChessboardLogic {
         let currentPiece = board[row][col]
         
         for dRow in -1...1 {
-                for dCol in -1...1 {
-                    // Skip the current square
-                    if dRow == 0 && dCol == 0 { continue }
-                    
-                    let newRow = row + dRow
-                    let newCol = col + dCol
-                    
-                    // Check bounds (0 to 7)
-                    if newRow >= 0 && newRow < 8 && newCol >= 0 && newCol < 8 {
-                        if board[newRow][newCol]?.color != currentPiece?.color {
-                            legalMoves.append((newRow, newCol))
-                        }
+            for dCol in -1...1 {
+                // Skip the current square
+                if dRow == 0 && dCol == 0 { continue }
+                
+                let newRow = row + dRow
+                let newCol = col + dCol
+                
+                // Check bounds (0 to 7)
+                if newRow >= 0 && newRow < 8 && newCol >= 0 && newCol < 8 {
+                    if board[newRow][newCol]?.color != currentPiece?.color {
+                        legalMoves.append((newRow, newCol))
                     }
                 }
             }
+        }
         
         return legalMoves
     }
     
-    mutating func moveAndPromote(from: (Int, Int), to: (Int, Int), promoteTo: PieceType) {
-            guard let piece = board[from.0][from.1] else { return }
-            
-            guard piece.color == currentTurn else { return }
-            
-            history.append(board)
-            
-            let promotedPiece = ChessPiece(type: promoteTo, color: piece.color)
-            
-            // Place the new piece at the destination
-            board[to.0][to.1] = promotedPiece
-            
-            // Clear the starting position
-            board[from.0][from.1] = nil
-            
-            currentTurn = (currentTurn == .white) ? .black : .white
-        }
+
 }
 
 
