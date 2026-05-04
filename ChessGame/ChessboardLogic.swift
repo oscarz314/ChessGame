@@ -22,6 +22,9 @@ struct ChessboardLogic {
     var history: [Board] = []
     var moveNum: Int = 0
     
+    //Property to keep track the previous move for highlighting
+    var lastMove: (from: (Int, Int), to: (Int, Int))?
+    
     init() {
         setupBoard()
     }
@@ -58,7 +61,9 @@ struct ChessboardLogic {
         // Only move if correct turn
         guard piece.color == currentTurn else { return }
         
-        let legalMoves = isLegal(row: from.0, col: from.1)
+        // check for legal moves and if is check safe
+        var legalMoves = isLegal(row: from.0, col: from.1)
+        legalMoves = isCheckSafe(legalMoves: legalMoves)
         
         if legalMoves.contains(where: { $0 == to }) {
             history.append(board)
@@ -68,8 +73,7 @@ struct ChessboardLogic {
             
             currentTurn = (currentTurn == .white) ? .black : .white
         }
-    }
-    
+
     func isLegal(row: Int, col: Int) -> [(Int, Int)] {
         guard let piece = board[row][col] else { return [] }
         
@@ -87,6 +91,20 @@ struct ChessboardLogic {
         case .king:
             return islegalKing(row: row, col: col)
         }
+    }
+    
+    func isCheckSafe (legalMoves: [(Int, Int)]) -> [(Int, Int)]{
+        var checkSafe = legalMoves
+        
+        for (row, rowArray) in board.enumerated() {
+            for (col, piece) in rowArray.enumerated() {
+                if let piece = piece {
+                    // use piece, row, col
+                }
+            }
+        }
+        
+        return checkSafe
     }
     
     func islegalPawn(row: Int, col:Int) -> [(Int, Int)] {
@@ -121,6 +139,15 @@ struct ChessboardLogic {
         
         if(col - 1 >= 0 && board[row - (1 * moveDirection)][col - 1] != nil){ // Check left side
             legalMoves.append((row - (1 * moveDirection), col))
+        }
+        
+        // Check if can capture sideways
+        if(col + 1 <= 7 && board[row - (1 * moveDirection)][col + 1] != nil && board[row - (1 * moveDirection)][col + 1]?.color != currentPiece?.color){ // Check right side
+            legalMoves.append((row - (1 * moveDirection), col + 1))
+        }
+        
+        if(col - 1 >= 0 && board[row - (1 * moveDirection)][col - 1] != nil && board[row - (1 * moveDirection)][col - 1]?.color != currentPiece?.color){ // Check left side
+            legalMoves.append((row - (1 * moveDirection), col - 1))
         }
         
         return legalMoves
@@ -256,6 +283,25 @@ struct ChessboardLogic {
     
     func islegalKing(row: Int, col:Int) -> [(Int, Int)] {
         var legalMoves: [(Int, Int)] = []
+        let currentPiece = board[row][col]
+        
+        for dRow in -1...1 {
+                for dCol in -1...1 {
+                    // Skip the current square
+                    if dRow == 0 && dCol == 0 { continue }
+                    
+                    let newRow = row + dRow
+                    let newCol = col + dCol
+                    
+                    // Check bounds (0 to 7)
+                    if newRow >= 0 && newRow < 8 && newCol >= 0 && newCol < 8 {
+                        if board[newRow][newCol]?.color != currentPiece?.color {
+                            legalMoves.append((newRow, newCol))
+                        }
+                    }
+                }
+            }
+        
         return legalMoves
     }
     

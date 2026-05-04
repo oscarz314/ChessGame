@@ -39,29 +39,17 @@ struct ChessBoard: View {
                             ForEach(0..<size, id: \.self) { row in
                                 GridRow {
                                     ForEach(0..<size, id: \.self) { column in
+                                                                            
+                                        //check if this square is part of the previous move
+                                        let lastFrom = game.lastMove?.from
+                                        let lastTo = game.lastMove?.to
+                                                                            
+                                        let isLastMove = (row == lastFrom?.0 && column == lastFrom?.1) || (row == lastTo?.0 && column == lastTo?.1)
+                                                                            
                                         Rectangle()
-                                            .fill(isDark(row: row, col: column) ? Color.green : Color.white)
-                                            .overlay(
-                                                ZStack {
-                                                    // Selected square highlight
-                                                    if selectedPiece?.row == row && selectedPiece?.col == column {
-                                                        Color.blue.opacity(0.4)
-                                                    }
-                                                    
-                                                    // Legal move highlight
-                                                    if legalMovesForSelected.contains(where: { $0 == (row, column) }) {
-                                                        Circle()
-                                                            .fill(Color.blue)
-                                                            .frame(width: 20, height: 20)
-
-                                                    }
-                                                }
-                                            )
-                                            .onTapGesture {
-                                                handleTapMove(row: row, col: column)
-                                            }
-                                        
-                                            .aspectRatio(1, contentMode: .fit)
+                                        // if it's the previous move, use yellow, otherwise use the board pattern
+                                        .fill(isLastMove ? Color.yellow.opacity(0.6) : isDark(row: row, col: column) ? Color.green : Color.white)
+                                        .aspectRatio(1, contentMode: .fit)
                                     }
                                 }
                             }
@@ -77,6 +65,7 @@ struct ChessBoard: View {
                                 .resizable()
                                 .scaledToFit()
                                 .frame(width: squareSize, height: squareSize)
+                                .zIndex(selectedPiece?.piece.id == item.piece.id ? 1 : 0)
                                 .position(
                                     x: CGFloat(item.col) * squareSize + (squareSize / 2) + (isSelected ? dragOffset.width : 0),
                                     y: CGFloat(item.row) * squareSize + (squareSize / 2) + (isSelected ? dragOffset.height : 0)
@@ -188,11 +177,11 @@ struct ChessBoard: View {
     }
     
     func promote(to type: PieceType) {
-        if let move = pendingPromotion {
-            game.board[move.to.row][move.to.col] = ChessPiece(type: type, color: game.currentTurn == .white ? .black : .white)
+            if let move = pendingPromotion {
+                game.board[move.to.row][move.to.col] = ChessPiece(type: type, color: move.to.row == 0 ? .white : .black)
+            }
+            pendingPromotion = nil
         }
-        pendingPromotion = nil
-    }
 }
 
 #Preview {
