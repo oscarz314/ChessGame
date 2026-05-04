@@ -30,16 +30,16 @@ struct ChessboardLogic {
     }
     
     var activePieces: [(piece: ChessPiece, row: Int, col: Int)] {
-            var list: [(piece: ChessPiece, row: Int, col: Int)] = []
-            for row in 0..<8 {
-                for col in 0..<8 {
-                    if let piece = board[row][col] {
-                        list.append((piece, row, col))
-                    }
+        var list: [(piece: ChessPiece, row: Int, col: Int)] = []
+        for row in 0..<8 {
+            for col in 0..<8 {
+                if let piece = board[row][col] {
+                    list.append((piece, row, col))
                 }
             }
-            return list
         }
+        return list
+    }
     
     mutating func setupBoard() {
         let backRow: [PieceType] = [
@@ -73,219 +73,220 @@ struct ChessboardLogic {
             
             currentTurn = (currentTurn == .white) ? .black : .white
         }
-
-    func isLegal(row: Int, col: Int) -> [(Int, Int)] {
-        guard let piece = board[row][col] else { return [] }
-        
-        switch piece.type {
-        case .pawn:
-            return islegalPawn(row: row, col: col)
-        case .bishop:
-            return islegalBishop(row: row, col: col)
-        case .knight:
-            return islegalKnight(row: row, col: col)
-        case .rook:
-            return islegalRook(row: row, col: col)
-        case .queen:
-            return islegalQueen(row: row, col: col)
-        case .king:
-            return islegalKing(row: row, col: col)
-        }
     }
-    
-    func isCheckSafe (legalMoves: [(Int, Int)]) -> [(Int, Int)]{
-        var checkSafe = legalMoves
         
-        for (row, rowArray) in board.enumerated() {
-            for (col, piece) in rowArray.enumerated() {
-                if let piece = piece {
-                    // use piece, row, col
+        func isLegal(row: Int, col: Int) -> [(Int, Int)] {
+            guard let piece = board[row][col] else { return [] }
+            
+            switch piece.type {
+            case .pawn:
+                return islegalPawn(row: row, col: col)
+            case .bishop:
+                return islegalBishop(row: row, col: col)
+            case .knight:
+                return islegalKnight(row: row, col: col)
+            case .rook:
+                return islegalRook(row: row, col: col)
+            case .queen:
+                return islegalQueen(row: row, col: col)
+            case .king:
+                return islegalKing(row: row, col: col)
+            }
+        }
+        
+        func isCheckSafe (legalMoves: [(Int, Int)]) -> [(Int, Int)]{
+            var checkSafe = legalMoves
+            
+            for (row, rowArray) in board.enumerated() {
+                for (col, piece) in rowArray.enumerated() {
+                    if let piece = piece {
+                        // use piece, row, col
+                    }
                 }
             }
-        }
-        
-        return checkSafe
-    }
-    
-    func islegalPawn(row: Int, col:Int) -> [(Int, Int)] {
-        var legalMoves: [(Int, Int)] = []
-        let currentPiece = board[row][col]
-        var moveDirection: Int
-
-        //Determine move direction
-        if (currentPiece?.color == .white){
-            moveDirection = 1
-        }
-        else{
-            moveDirection = -1
-        }
-        
-        // Check if can move twice else check once
-        if (row == 6 || row == 1){
-            if(board[row - (2 * moveDirection)][col] == nil){
-                legalMoves.append((row - (2 * moveDirection), col))
-            }
-        }
-        
-        // Check moving forwards
-        if(board[row - (1 * moveDirection)][col] == nil){
-            legalMoves.append((row - (1 * moveDirection), col))
-        }
-        
-        // Check if can capture sideways
-        if(col + 1 <= 7 && board[row - (1 * moveDirection)][col + 1] != nil){ // Check right side
-            legalMoves.append((row - (1 * moveDirection), col))
-        }
-        
-        if(col - 1 >= 0 && board[row - (1 * moveDirection)][col - 1] != nil){ // Check left side
-            legalMoves.append((row - (1 * moveDirection), col))
-        }
-        
-        // Check if can capture sideways
-        if(col + 1 <= 7 && board[row - (1 * moveDirection)][col + 1] != nil && board[row - (1 * moveDirection)][col + 1]?.color != currentPiece?.color){ // Check right side
-            legalMoves.append((row - (1 * moveDirection), col + 1))
-        }
-        
-        if(col - 1 >= 0 && board[row - (1 * moveDirection)][col - 1] != nil && board[row - (1 * moveDirection)][col - 1]?.color != currentPiece?.color){ // Check left side
-            legalMoves.append((row - (1 * moveDirection), col - 1))
-        }
-        
-        return legalMoves
-    }
-    
-    func islegalBishop(row: Int, col:Int)-> [(Int, Int)] {
-        var legalMoves: [(Int, Int)] = []
-        guard let piece = board[row][col] else { return [] }
-        
-        //4 diagonal directions: (row change, col change)
-        let directions = [(-1,-1), (-1,1), (1,-1), (1,1)]
-        
-        for dir in directions {
-            var nextRow = row + dir.0
-            var nextCol = col + dir.1
             
-            while (0..<8).contains(nextRow) && (0..<8).contains(nextCol) {
-                if let targetPiece = board[nextRow][nextCol] {
-                    if (targetPiece.color != piece.color) {
+            return checkSafe
+        }
+        
+        func islegalPawn(row: Int, col:Int) -> [(Int, Int)] {
+            var legalMoves: [(Int, Int)] = []
+            let currentPiece = board[row][col]
+            var moveDirection: Int
+            
+            //Determine move direction
+            if (currentPiece?.color == .white){
+                moveDirection = 1
+            }
+            else{
+                moveDirection = -1
+            }
+            
+            // Check if can move twice else check once
+            if (row == 6 || row == 1){
+                if(board[row - (2 * moveDirection)][col] == nil){
+                    legalMoves.append((row - (2 * moveDirection), col))
+                }
+            }
+            
+            // Check moving forwards
+            if(board[row - (1 * moveDirection)][col] == nil){
+                legalMoves.append((row - (1 * moveDirection), col))
+            }
+            
+            // Check if can capture sideways
+            if(col + 1 <= 7 && board[row - (1 * moveDirection)][col + 1] != nil){ // Check right side
+                legalMoves.append((row - (1 * moveDirection), col))
+            }
+            
+            if(col - 1 >= 0 && board[row - (1 * moveDirection)][col - 1] != nil){ // Check left side
+                legalMoves.append((row - (1 * moveDirection), col))
+            }
+            
+            // Check if can capture sideways
+            if(col + 1 <= 7 && board[row - (1 * moveDirection)][col + 1] != nil && board[row - (1 * moveDirection)][col + 1]?.color != currentPiece?.color){ // Check right side
+                legalMoves.append((row - (1 * moveDirection), col + 1))
+            }
+            
+            if(col - 1 >= 0 && board[row - (1 * moveDirection)][col - 1] != nil && board[row - (1 * moveDirection)][col - 1]?.color != currentPiece?.color){ // Check left side
+                legalMoves.append((row - (1 * moveDirection), col - 1))
+            }
+            
+            return legalMoves
+        }
+        
+        func islegalBishop(row: Int, col:Int)-> [(Int, Int)] {
+            var legalMoves: [(Int, Int)] = []
+            guard let piece = board[row][col] else { return [] }
+            
+            //4 diagonal directions: (row change, col change)
+            let directions = [(-1,-1), (-1,1), (1,-1), (1,1)]
+            
+            for dir in directions {
+                var nextRow = row + dir.0
+                var nextCol = col + dir.1
+                
+                while (0..<8).contains(nextRow) && (0..<8).contains(nextCol) {
+                    if let targetPiece = board[nextRow][nextCol] {
+                        if (targetPiece.color != piece.color) {
+                            legalMoves.append((nextRow, nextCol))
+                        }
+                        //if we hit any piece, we can't slide further
+                        break
+                    } else {
+                        legalMoves.append((nextRow, nextCol))
+                        nextRow += dir.0
+                        nextCol += dir.1
+                    }
+                }
+            }
+            
+            return legalMoves
+        }
+        
+        func islegalKnight(row: Int, col:Int)-> [(Int, Int)] {
+            var legalMoves: [(Int, Int)] = []
+            guard let piece = board[row][col] else { return [] }
+            
+            // 8 possible L-shapes the knight can make
+            let offsets = [
+                (-2, -1), (-2,1),
+                (2,-1), (2,1),
+                (-1,-2), (1,-2),
+                (-1,2), (1,2)
+            ]
+            
+            for offset in offsets {
+                let nextRow = row + offset.0
+                let nextCol = col + offset.1
+                
+                if (0..<8).contains(nextRow) && (0..<8).contains(nextCol) {
+                    if let targetPiece = board[nextRow][nextCol] {
+                        if targetPiece.color != piece.color {
+                            legalMoves.append((nextRow, nextCol))
+                        }
+                    } else {
                         legalMoves.append((nextRow, nextCol))
                     }
-                    //if we hit any piece, we can't slide further
+                }
+            }
+            return legalMoves
+        }
+        
+        func islegalRook(row: Int, col:Int)-> [(Int, Int)] {
+            var legalMoves: [(Int, Int)] = []
+            guard let piece = board[row][col] else { return [] }
+            
+            // RIGHT
+            var c = col + 1
+            while c < 8 {
+                if let target = board[row][c] {
+                    if target.color != piece.color {
+                        legalMoves.append((row, c))
+                    }
                     break
-                } else {
-                    legalMoves.append((nextRow, nextCol))
-                    nextRow += dir.0
-                    nextCol += dir.1
                 }
+                legalMoves.append((row, c))
+                c += 1
             }
-        }
-        
-        return legalMoves
-    }
-    
-    func islegalKnight(row: Int, col:Int)-> [(Int, Int)] {
-        var legalMoves: [(Int, Int)] = []
-        guard let piece = board[row][col] else { return [] }
-        
-        // 8 possible L-shapes the knight can make
-        let offsets = [
-            (-2, -1), (-2,1),
-            (2,-1), (2,1),
-            (-1,-2), (1,-2),
-            (-1,2), (1,2)
-        ]
-        
-        for offset in offsets {
-            let nextRow = row + offset.0
-            let nextCol = col + offset.1
             
-            if (0..<8).contains(nextRow) && (0..<8).contains(nextCol) {
-                if let targetPiece = board[nextRow][nextCol] {
-                    if targetPiece.color != piece.color {
-                        legalMoves.append((nextRow, nextCol))
+            // LEFT
+            c = col - 1
+            while c >= 0 {
+                if let target = board[row][c] {
+                    if target.color != piece.color {
+                        legalMoves.append((row, c))
                     }
-                } else {
-                    legalMoves.append((nextRow, nextCol))
+                    break
                 }
+                legalMoves.append((row, c))
+                c -= 1
             }
-        }
-        return legalMoves
-    }
-    
-    func islegalRook(row: Int, col:Int)-> [(Int, Int)] {
-        var legalMoves: [(Int, Int)] = []
-        guard let piece = board[row][col] else { return [] }
-        
-        // RIGHT
-        var c = col + 1
-        while c < 8 {
-            if let target = board[row][c] {
-                if target.color != piece.color {
-                    legalMoves.append((row, c))
+            
+            // DOWN
+            var r = row + 1
+            while r < 8 {
+                if let target = board[r][col] {
+                    if target.color != piece.color {
+                        legalMoves.append((r, col))
+                    }
+                    break
                 }
-                break
+                legalMoves.append((r, col))
+                r += 1
             }
-            legalMoves.append((row, c))
-            c += 1
-        }
-        
-        // LEFT
-        c = col - 1
-        while c >= 0 {
-            if let target = board[row][c] {
-                if target.color != piece.color {
-                    legalMoves.append((row, c))
+            
+            // UP
+            r = row - 1
+            while r >= 0 {
+                if let target = board[r][col] {
+                    if target.color != piece.color {
+                        legalMoves.append((r, col))
+                    }
+                    break
                 }
-                break
+                legalMoves.append((r, col))
+                r -= 1
             }
-            legalMoves.append((row, c))
-            c -= 1
+            
+            return legalMoves
         }
         
-        // DOWN
-        var r = row + 1
-        while r < 8 {
-            if let target = board[r][col] {
-                if target.color != piece.color {
-                    legalMoves.append((r, col))
-                }
-                break
-            }
-            legalMoves.append((r, col))
-            r += 1
+        func islegalQueen(row: Int, col:Int)-> [(Int, Int)] {
+            
+            let legalMovesRook = islegalRook(row: row, col: col)
+            let legalMovesBishop = islegalBishop(row: row, col: col)
+            
+            // Queen's movment = rook moves + bishop moves
+            let legalMoves = legalMovesRook + legalMovesBishop
+            
+            return legalMoves
         }
         
-        // UP
-        r = row - 1
-        while r >= 0 {
-            if let target = board[r][col] {
-                if target.color != piece.color {
-                    legalMoves.append((r, col))
-                }
-                break
-            }
-            legalMoves.append((r, col))
-            r -= 1
-        }
-        
-        return legalMoves
-    }
-    
-    func islegalQueen(row: Int, col:Int)-> [(Int, Int)] {
-        
-        var legalMovesRook = islegalRook(row: row, col: col)
-        var legalMovesBishop = islegalBishop(row: row, col: col)
-        
-        // Queen's movment = rook moves + bishop moves
-        let legalMoves = legalMovesRook + legalMovesBishop
-        
-        return legalMoves
-    }
-    
-    func islegalKing(row: Int, col:Int) -> [(Int, Int)] {
-        var legalMoves: [(Int, Int)] = []
-        let currentPiece = board[row][col]
-        
-        for dRow in -1...1 {
+        func islegalKing(row: Int, col:Int) -> [(Int, Int)] {
+            var legalMoves: [(Int, Int)] = []
+            let currentPiece = board[row][col]
+            
+            for dRow in -1...1 {
                 for dCol in -1...1 {
                     // Skip the current square
                     if dRow == 0 && dCol == 0 { continue }
@@ -301,11 +302,11 @@ struct ChessboardLogic {
                     }
                 }
             }
+            
+            return legalMoves
+        }
         
-        return legalMoves
-    }
-    
-    mutating func moveAndPromote(from: (Int, Int), to: (Int, Int), promoteTo: PieceType) {
+        mutating func moveAndPromote(from: (Int, Int), to: (Int, Int), promoteTo: PieceType) {
             guard let piece = board[from.0][from.1] else { return }
             
             guard piece.color == currentTurn else { return }
@@ -322,7 +323,4 @@ struct ChessboardLogic {
             
             currentTurn = (currentTurn == .white) ? .black : .white
         }
-}
-
-
-
+    }

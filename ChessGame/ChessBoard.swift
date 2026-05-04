@@ -50,6 +50,33 @@ struct ChessBoard: View {
                                         // if it's the previous move, use yellow, otherwise use the board pattern
                                         .fill(isLastMove ? Color.yellow.opacity(0.6) : isDark(row: row, col: column) ? Color.green : Color.white)
                                         .aspectRatio(1, contentMode: .fit)
+                                        .overlay(
+                                            ZStack {
+                                                //selected square highlight
+                                                if selectedPiece?.row == row && selectedPiece?.col == column {
+                                                    Color.blue.opacity(0.4)
+                                                }
+                                                
+                                                //legal move highlight
+                                                if legalMovesForSelected.contains(where: {$0 == (row,column)}) {
+                                                    if game.board[row][column] != nil {
+                                                        // Capture move → outlined circle
+                                                        Circle()
+                                                            .stroke(Color.black, lineWidth: 4)
+                                                            .padding(6)
+                                                    } else {
+                                                        // Normal move → filled dot
+                                                        Circle()
+                                                            .fill(Color.blue)
+                                                            .frame(width: 20, height: 20)
+                                                
+                                                    }
+                                                }
+                                            })
+                                        .onTapGesture {
+                                            handleTapMove(row: row, col: column)
+                                        }
+                                        
                                     }
                                 }
                             }
@@ -175,6 +202,9 @@ struct ChessBoard: View {
             }
         }
     }
+    
+    
+    
     
     func promote(to type: PieceType) {
             if let move = pendingPromotion {
