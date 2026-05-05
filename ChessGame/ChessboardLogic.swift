@@ -223,7 +223,7 @@ struct ChessboardLogic {
             // RIGHT
             var c = col + 1
             while c < 8 {
-                if let target = board[row][c] {
+                if let target = targetBoard[row][c] {
                     if target.color != piece.color {
                         legalMoves.append((row, c))
                     }
@@ -277,8 +277,8 @@ struct ChessboardLogic {
         
     func islegalQueen(row: Int, col:Int, targetBoard: Board)-> [(Int, Int)] {
             
-            let legalMovesRook = islegalRook(row: row, col: col, targetBoard: <#T##Board#>)
-            let legalMovesBishop = islegalBishop(row: row, col: col, targetBoard: <#T##Board#>)
+            let legalMovesRook = islegalRook(row: row, col: col, targetBoard: targetBoard)
+            let legalMovesBishop = islegalBishop(row: row, col: col, targetBoard: targetBoard)
             
             // Queen's movment = rook moves + bishop moves
             let legalMoves = legalMovesRook + legalMovesBishop
