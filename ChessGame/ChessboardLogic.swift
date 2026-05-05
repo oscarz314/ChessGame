@@ -56,27 +56,26 @@ struct ChessboardLogic {
     }
     
     mutating func move(from: (Int, Int), to: (Int, Int)) {
-        guard let piece = board[from.0][from.1] else { return }
-        
-        // Only move if correct turn
-        guard piece.color == currentTurn else { return }
-        
-        // check for legal moves and if is check safe
-        var legalMoves = isLegal(row: from.0, col: from.1)
-        legalMoves = isCheckSafe(from: from, legalMoves: legalMoves)
-        
-        if legalMoves.contains(where: { $0 == to }) {
-            history.append(board)
+            guard let piece = board[from.0][from.1], piece.color == currentTurn else { return }
             
-            board[to.0][to.1] = piece
-            board[from.0][from.1] = nil
+            // Gets pseudo legal moves based on piece type and location
+            let pseudoMoves = isLegal(row: from.0, col: from.1, targetBoard: self.board)
             
-            currentTurn = (currentTurn == .white) ? .black : .white
+            //Filter for if the move puts King safety at risk (Pins, etc.)
+            let legalMoves = isCheckSafe(from: from, pseudoMoves: pseudoMoves)
+            
+            // Checks if we have a list of legal moves for the selected piece
+            if legalMoves.contains(where: { $0 == to }) {
+                history.append(board)
+                board[to.0][to.1] = piece
+                board[from.0][from.1] = nil
+                currentTurn = (currentTurn == .white) ? .black : .white
+            }
         }
-    }
+
         
-        func isLegal(row: Int, col: Int) -> [(Int, Int)] {
-            guard let piece = board[row][col] else { return [] }
+    func isLegal(row: Int, col: Int, targetBoard: Board) -> [(Int, Int)] {
+            guard let piece = targetBoard[row][col] else { return [] }
             
             switch piece.type {
             case .pawn:
@@ -94,59 +93,29 @@ struct ChessboardLogic {
             }
         }
         
-        func isCheckSafe(from: (Int, Int), legalMoves: [(Int, Int)]) -> [(Int, Int)] {
+    func isCheckSafe(from: (Int, Int), pseudoMoves: [(Int, Int)]) -> [(Int, Int)] {
             guard let piece = board[from.0][from.1] else { return [] }
-            
             var safeMoves: [(Int, Int)] = []
-            
-            for move in legalMoves {
-                var tempBoard = board
-                
-                // For each move test on temp board
+
+            for move in pseudoMoves {
+                // Simulate the move on a temporary board
+                var tempBoard = self.board
                 tempBoard[move.0][move.1] = piece
                 tempBoard[from.0][from.1] = nil
-                
-                // find king position AFTER move
-                var kingPos: (Int, Int)?
-                
-                for r in 0..<8 {
-                    for c in 0..<8 {
-                        if let p = tempBoard[r][c],
-                           p.type == .king,
-                           p.color == piece.color {
-                            kingPos = (r, c)
-                        }
+
+                // Find our King's position on this simulated board
+                if let kingPos = findKing(color: piece.color, on: tempBoard) {
+                    let enemyColor: PieceColor = (piece.color == .white) ? .black : .white
+                    
+                    // If the enemy cannot attack the King after this move, it is legal
+                    if !isSquareAttacked(row: kingPos.0, col: kingPos.1, by: enemyColor, on: tempBoard) {
+                        safeMoves.append(move)
                     }
-                }
-                
-                guard let king = kingPos else { continue }
-                
-                // check if any enemy piece can attack king
-                var kingInCheck = false
-                
-                for r in 0..<8 {
-                    for c in 0..<8 {
-                        if let enemy = tempBoard[r][c],
-                           enemy.color != piece.color {
-                            
-                            let enemyMoves = isLegal(row: r, col: c)
-                            
-                            if enemyMoves.contains(where: { $0 == king }) {
-                                kingInCheck = true
-                                break
-                            }
-                        }
-                    }
-                    if kingInCheck { break }
-                }
-                
-                if !kingInCheck {
-                    safeMoves.append(move)
                 }
             }
-            
             return safeMoves
         }
+
         
         func islegalPawn(row: Int, col:Int) -> [(Int, Int)] {
             var legalMoves: [(Int, Int)] = []
@@ -354,5 +323,33 @@ struct ChessboardLogic {
         
         currentTurn = (currentTurn == .white) ? .black : .white
     }
+    
+    //Helper methods
+    func isSquareAttacked(row: Int, col: Int, by color: PieceColor, on targetBoard: Board) -> Bool {
+          for r in 0..<8 {
+              for c in 0..<8 {
+                  if let piece = targetBoard[r][c], piece.color == color {
+                      // We check if the enemy piece can reach this square geometrically
+                      let attacks = isLegal(row: r, col: c, targetBoard: targetBoard)
+                      if attacks.contains(where: { $0.0 == row && $0.1 == col }) {
+                          return true
+                      }
+                  }
+              }
+          }
+          return false
+      }
+
+   private func findKing(color: PieceColor, on targetBoard: Board) -> (Int, Int)? {
+          for r in 0..<8 {
+              for c in 0..<8 {
+                  if let p = targetBoard[r][c], p.type == .king, p.color == color {
+                      return (r, c)
+                  }
+              }
+          }
+          return nil
+      }
+
 }
 

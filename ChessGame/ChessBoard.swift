@@ -21,7 +21,8 @@ struct ChessBoard: View {
     
     var legalMovesForSelected: [(Int, Int)] {
         guard let selected = selectedPiece else { return [] }
-        return game.isLegal(row: selected.row, col: selected.col)
+        var legalMoves = game.isLegal(row: selected.row, col: selected.col, targetBoard: game.board)
+        return game.isCheckSafe(from: (selected.row, selected.col), pseudoMoves: legalMoves)
     }
     
     var body: some View {
@@ -174,7 +175,7 @@ struct ChessBoard: View {
         // If a piece is already selected → try to move
         if let selected = selectedPiece {
             
-            let legalMoves = game.isLegal(row: selected.row, col: selected.col)
+            let legalMoves = game.isLegal(row: selected.row, col: selected.col, targetBoard: game.board)
             
             // If tapped square is a legal move → move
             if legalMoves.contains(where: { $0 == (row, col) }) {
