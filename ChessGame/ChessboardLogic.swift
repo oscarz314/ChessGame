@@ -57,7 +57,7 @@ struct ChessboardLogic {
     
     mutating func move(from: (Int, Int), to: (Int, Int)) {
             guard let piece = board[from.0][from.1], piece.color == currentTurn else { return }
-            lastMove = (from, to)
+            
             
             // Gets pseudo legal moves based on piece type and location
             let pseudoMoves = isLegal(row: from.0, col: from.1, targetBoard: self.board)
@@ -70,6 +70,7 @@ struct ChessboardLogic {
                 history.append(board)
                 board[to.0][to.1] = piece
                 board[from.0][from.1] = nil
+                lastMove = (from, to)
                 currentTurn = (currentTurn == .white) ? .black : .white
             }
         }
@@ -192,11 +193,12 @@ struct ChessboardLogic {
             guard let piece = targetBoard[row][col] else { return [] }
             
             // 8 possible L-shapes the knight can make
+        
             let offsets = [
-                (-2, -1), (-2,1),
-                (2,-1), (2,1),
-                (-1,-2), (1,-2),
-                (-1,2), (1,2)
+                (-2, -1), (-2, 1),
+                (2, -1), (2, 1),
+                (-1, -2), (-1, 2),
+                (1, -2), (1, 2)
             ]
             
             for offset in offsets {
@@ -330,19 +332,35 @@ struct ChessboardLogic {
     
     //Helper methods
     func isSquareAttacked(row: Int, col: Int, by color: PieceColor, on targetBoard: Board) -> Bool {
-          for r in 0..<8 {
-              for c in 0..<8 {
-                  if let piece = targetBoard[r][c], piece.color == color {
-                      // We check if the enemy piece can reach this square geometrically
-                      let attacks = isLegal(row: r, col: c, targetBoard: targetBoard)
-                      if attacks.contains(where: { $0.0 == row && $0.1 == col }) {
-                          return true
-                      }
-                  }
-              }
-          }
-          return false
-      }
+        
+        for r in 0..<8 {
+            for c in 0..<8 {
+                guard let piece = targetBoard[r][c], piece.color == color else { continue }
+                
+                if piece.type == .pawn {
+                    let direction = (piece.color == .white) ? -1 : 1
+                    
+                    for dCol in [-1, 1] {
+                        let attackRow = r + direction
+                        let attackCol = c + dCol
+                        
+                        if attackRow == row && attackCol == col {
+                            return true
+                        }
+                    }
+                    
+                } else {
+                    let attacks = isLegal(row: r, col: c, targetBoard: targetBoard)
+                    
+                    if attacks.contains(where: { $0 == (row, col) }) {
+                        return true
+                    }
+                }
+            }
+        }
+        
+        return false
+    }
 
    private func findKing(color: PieceColor, on targetBoard: Board) -> (Int, Int)? {
           for r in 0..<8 {
