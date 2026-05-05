@@ -57,6 +57,7 @@ struct ChessboardLogic {
     
     mutating func move(from: (Int, Int), to: (Int, Int)) {
             guard let piece = board[from.0][from.1], piece.color == currentTurn else { return }
+            lastMove = (from, to)
             
             // Gets pseudo legal moves based on piece type and location
             let pseudoMoves = isLegal(row: from.0, col: from.1, targetBoard: self.board)
@@ -117,38 +118,41 @@ struct ChessboardLogic {
         }
 
         
-        func islegalPawn(row: Int, col:Int) -> [(Int, Int)] {
+        func islegalPawn(row: Int, col: Int) -> [(Int, Int)] {
             var legalMoves: [(Int, Int)] = []
-            let currentPiece = board[row][col]
-            var moveDirection: Int
             
-            //Determine move direction
-            if (currentPiece?.color == .white){
-                moveDirection = 1
-            }
-            else{
-                moveDirection = -1
-            }
+            guard let currentPiece = board[row][col] else { return [] }
             
-            // Check if can move twice else check once
-            if (row == 6 || row == 1){
-                if(board[row - (2 * moveDirection)][col] == nil){
-                    legalMoves.append((row - (2 * moveDirection), col))
+            let direction = (currentPiece.color == .white) ? -1 : 1
+            
+            let oneStep = row + direction
+            
+            // move forward
+            if (0..<8).contains(oneStep) && board[oneStep][col] == nil {
+                legalMoves.append((oneStep, col))
+                
+                // move 2 spaces
+                let twoStep = row + 2 * direction
+                if (currentPiece.color == .white && row == 6) ||
+                   (currentPiece.color == .black && row == 1) {
+                    
+                    if (0..<8).contains(twoStep) && board[twoStep][col] == nil {
+                        legalMoves.append((twoStep, col))
+                    }
                 }
             }
             
-            // Check moving forwards
-            if(board[row - (1 * moveDirection)][col] == nil){
-                legalMoves.append((row - (1 * moveDirection), col))
-            }
-            
-            // Check if can capture sideways
-            if(col + 1 <= 7 && board[row - (1 * moveDirection)][col + 1] != nil && board[row - (1 * moveDirection)][col + 1]?.color != currentPiece?.color){ // Check right side
-                legalMoves.append((row - (1 * moveDirection), col + 1))
-            }
-            
-            if(col - 1 >= 0 && board[row - (1 * moveDirection)][col - 1] != nil && board[row - (1 * moveDirection)][col - 1]?.color != currentPiece?.color){ // Check left side
-                legalMoves.append((row - (1 * moveDirection), col - 1))
+            // diagonal capture
+            for dCol in [-1, 1] {
+                let newRow = row + direction
+                let newCol = col + dCol
+                
+                if (0..<8).contains(newRow) && (0..<8).contains(newCol) {
+                    if let target = board[newRow][newCol],
+                       target.color != currentPiece.color {
+                        legalMoves.append((newRow, newCol))
+                    }
+                }
             }
             
             return legalMoves
@@ -273,8 +277,8 @@ struct ChessboardLogic {
         
         func islegalQueen(row: Int, col:Int)-> [(Int, Int)] {
             
-            var legalMovesRook = islegalRook(row: row, col: col)
-            var legalMovesBishop = islegalBishop(row: row, col: col)
+            let legalMovesRook = islegalRook(row: row, col: col)
+            let legalMovesBishop = islegalBishop(row: row, col: col)
             
             // Queen's movment = rook moves + bishop moves
             let legalMoves = legalMovesRook + legalMovesBishop
