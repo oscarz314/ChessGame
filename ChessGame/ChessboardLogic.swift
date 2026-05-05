@@ -223,7 +223,7 @@ struct ChessboardLogic {
             // RIGHT
             var c = col + 1
             while c < 8 {
-                if let target = board[row][c] {
+                if let target = targetBoard[row][c] {
                     if target.color != piece.color {
                         legalMoves.append((row, c))
                     }
@@ -277,8 +277,8 @@ struct ChessboardLogic {
         
     func islegalQueen(row: Int, col:Int, targetBoard: Board)-> [(Int, Int)] {
             
-            let legalMovesRook = islegalRook(row: row, col: col, targetBoard: <#T##Board#>)
-            let legalMovesBishop = islegalBishop(row: row, col: col, targetBoard: <#T##Board#>)
+            let legalMovesRook = islegalRook(row: row, col: col, targetBoard: targetBoard)
+            let legalMovesBishop = islegalBishop(row: row, col: col, targetBoard: targetBoard)
             
             // Queen's movment = rook moves + bishop moves
             let legalMoves = legalMovesRook + legalMovesBishop
@@ -311,20 +311,33 @@ struct ChessboardLogic {
         }
     
     mutating func moveAndPromote(from: (Int, Int), to: (Int, Int), promoteTo: PieceType) {
-        guard let piece = board[from.0][from.1] else { return }
-        
-        guard piece.color == currentTurn else { return }
-        
+
+        guard let piece = board[from.0][from.1],
+              piece.color == currentTurn,
+              piece.type == .pawn else { return }
+
+        // must reach last rank
+        let isPromotionRank =
+            (piece.color == .white && to.0 == 0) ||
+            (piece.color == .black && to.0 == 7)
+
+        guard isPromotionRank else { return }
+
+        let pseudoMoves = isLegal(row: from.0, col: from.1, targetBoard: board)
+        let legalMoves = isCheckSafe(from: from, pseudoMoves: pseudoMoves)
+
+        guard legalMoves.contains(where: { $0 == to }) else { return }
+
         history.append(board)
-        
+
+        // Only allow valid promotions
+        guard [.queen, .rook, .bishop, .knight].contains(promoteTo) else { return }
+
         let promotedPiece = ChessPiece(type: promoteTo, color: piece.color)
-        
-        // Place the new piece at the destination
+
         board[to.0][to.1] = promotedPiece
-        
-        // Clear the starting position
         board[from.0][from.1] = nil
-        
+
         currentTurn = (currentTurn == .white) ? .black : .white
     }
     
