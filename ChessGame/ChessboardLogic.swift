@@ -18,9 +18,10 @@ struct ChessboardLogic {
     )
     
     var currentTurn: PieceColor = .white
-    
     var history: [Board] = []
     var moveNum: Int = 0
+    var whiteKingMoved: Bool = false
+    var blackKingMoved: Bool = false
     
     //Property to keep track the previous move for highlighting
     var lastMove: (from: (Int, Int), to: (Int, Int))?
@@ -72,6 +73,15 @@ struct ChessboardLogic {
                 board[from.0][from.1] = nil
                 lastMove = (from, to)
                 currentTurn = (currentTurn == .white) ? .black : .white
+                //Check if king has moved
+                if piece.type == .king{
+                    if piece.color == .white{
+                        whiteKingMoved = true
+                    }
+                    else{
+                        blackKingMoved = true
+                    }
+                }
             }
         }
 
@@ -309,6 +319,7 @@ struct ChessboardLogic {
                 }
             }
             
+        
             return legalMoves
         }
     
