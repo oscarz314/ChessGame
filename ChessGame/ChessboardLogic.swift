@@ -80,17 +80,17 @@ struct ChessboardLogic {
             
             switch piece.type {
             case .pawn:
-                return islegalPawn(row: row, col: col)
+                return islegalPawn(row: row, col: col, targetBoard: targetBoard)
             case .bishop:
-                return islegalBishop(row: row, col: col)
+                return islegalBishop(row: row, col: col, targetBoard: targetBoard)
             case .knight:
-                return islegalKnight(row: row, col: col)
+                return islegalKnight(row: row, col: col, targetBoard: targetBoard)
             case .rook:
-                return islegalRook(row: row, col: col)
+                return islegalRook(row: row, col: col, targetBoard: targetBoard)
             case .queen:
-                return islegalQueen(row: row, col: col)
+                return islegalQueen(row: row, col: col, targetBoard: targetBoard)
             case .king:
-                return islegalKing(row: row, col: col)
+                return islegalKing(row: row, col: col, targetBoard: targetBoard)
             }
         }
         
@@ -118,17 +118,17 @@ struct ChessboardLogic {
         }
 
         
-        func islegalPawn(row: Int, col: Int) -> [(Int, Int)] {
+    func islegalPawn(row: Int, col: Int, targetBoard:Board) -> [(Int, Int)] {
             var legalMoves: [(Int, Int)] = []
             
-            guard let currentPiece = board[row][col] else { return [] }
+            guard let currentPiece = targetBoard[row][col] else { return [] }
             
             let direction = (currentPiece.color == .white) ? -1 : 1
             
             let oneStep = row + direction
             
             // move forward
-            if (0..<8).contains(oneStep) && board[oneStep][col] == nil {
+            if (0..<8).contains(oneStep) && targetBoard[oneStep][col] == nil {
                 legalMoves.append((oneStep, col))
                 
                 // move 2 spaces
@@ -136,7 +136,7 @@ struct ChessboardLogic {
                 if (currentPiece.color == .white && row == 6) ||
                    (currentPiece.color == .black && row == 1) {
                     
-                    if (0..<8).contains(twoStep) && board[twoStep][col] == nil {
+                    if (0..<8).contains(twoStep) && targetBoard[twoStep][col] == nil {
                         legalMoves.append((twoStep, col))
                     }
                 }
@@ -148,7 +148,7 @@ struct ChessboardLogic {
                 let newCol = col + dCol
                 
                 if (0..<8).contains(newRow) && (0..<8).contains(newCol) {
-                    if let target = board[newRow][newCol],
+                    if let target = targetBoard[newRow][newCol],
                        target.color != currentPiece.color {
                         legalMoves.append((newRow, newCol))
                     }
@@ -158,9 +158,9 @@ struct ChessboardLogic {
             return legalMoves
         }
         
-        func islegalBishop(row: Int, col:Int)-> [(Int, Int)] {
+    func islegalBishop(row: Int, col:Int, targetBoard: Board)-> [(Int, Int)] {
             var legalMoves: [(Int, Int)] = []
-            guard let piece = board[row][col] else { return [] }
+            guard let piece = targetBoard[row][col] else { return [] }
             
             //4 diagonal directions: (row change, col change)
             let directions = [(-1,-1), (-1,1), (1,-1), (1,1)]
@@ -170,7 +170,7 @@ struct ChessboardLogic {
                 var nextCol = col + dir.1
                 
                 while (0..<8).contains(nextRow) && (0..<8).contains(nextCol) {
-                    if let targetPiece = board[nextRow][nextCol] {
+                    if let targetPiece = targetBoard[nextRow][nextCol] {
                         if (targetPiece.color != piece.color) {
                             legalMoves.append((nextRow, nextCol))
                         }
@@ -187,9 +187,9 @@ struct ChessboardLogic {
             return legalMoves
         }
         
-        func islegalKnight(row: Int, col:Int)-> [(Int, Int)] {
+    func islegalKnight(row: Int, col:Int, targetBoard: Board)-> [(Int, Int)] {
             var legalMoves: [(Int, Int)] = []
-            guard let piece = board[row][col] else { return [] }
+            guard let piece = targetBoard[row][col] else { return [] }
             
             // 8 possible L-shapes the knight can make
             let offsets = [
@@ -204,7 +204,7 @@ struct ChessboardLogic {
                 let nextCol = col + offset.1
                 
                 if (0..<8).contains(nextRow) && (0..<8).contains(nextCol) {
-                    if let targetPiece = board[nextRow][nextCol] {
+                    if let targetPiece = targetBoard[nextRow][nextCol] {
                         if targetPiece.color != piece.color {
                             legalMoves.append((nextRow, nextCol))
                         }
@@ -216,9 +216,9 @@ struct ChessboardLogic {
             return legalMoves
         }
         
-        func islegalRook(row: Int, col:Int)-> [(Int, Int)] {
+    func islegalRook(row: Int, col:Int, targetBoard: Board)-> [(Int, Int)] {
             var legalMoves: [(Int, Int)] = []
-            guard let piece = board[row][col] else { return [] }
+            guard let piece = targetBoard[row][col] else { return [] }
             
             // RIGHT
             var c = col + 1
@@ -236,7 +236,7 @@ struct ChessboardLogic {
             // LEFT
             c = col - 1
             while c >= 0 {
-                if let target = board[row][c] {
+                if let target = targetBoard[row][c] {
                     if target.color != piece.color {
                         legalMoves.append((row, c))
                     }
@@ -249,7 +249,7 @@ struct ChessboardLogic {
             // DOWN
             var r = row + 1
             while r < 8 {
-                if let target = board[r][col] {
+                if let target = targetBoard[r][col] {
                     if target.color != piece.color {
                         legalMoves.append((r, col))
                     }
@@ -262,7 +262,7 @@ struct ChessboardLogic {
             // UP
             r = row - 1
             while r >= 0 {
-                if let target = board[r][col] {
+                if let target = targetBoard[r][col] {
                     if target.color != piece.color {
                         legalMoves.append((r, col))
                     }
@@ -275,10 +275,10 @@ struct ChessboardLogic {
             return legalMoves
         }
         
-        func islegalQueen(row: Int, col:Int)-> [(Int, Int)] {
+    func islegalQueen(row: Int, col:Int, targetBoard: Board)-> [(Int, Int)] {
             
-            let legalMovesRook = islegalRook(row: row, col: col)
-            let legalMovesBishop = islegalBishop(row: row, col: col)
+            let legalMovesRook = islegalRook(row: row, col: col, targetBoard: <#T##Board#>)
+            let legalMovesBishop = islegalBishop(row: row, col: col, targetBoard: <#T##Board#>)
             
             // Queen's movment = rook moves + bishop moves
             let legalMoves = legalMovesRook + legalMovesBishop
@@ -286,9 +286,9 @@ struct ChessboardLogic {
             return legalMoves
         }
         
-        func islegalKing(row: Int, col:Int) -> [(Int, Int)] {
+    func islegalKing(row: Int, col:Int, targetBoard: Board) -> [(Int, Int)] {
             var legalMoves: [(Int, Int)] = []
-            let currentPiece = board[row][col]
+            let currentPiece = targetBoard[row][col]
             
             for dRow in -1...1 {
                 for dCol in -1...1 {
@@ -300,7 +300,7 @@ struct ChessboardLogic {
                     
                     // Check bounds (0 to 7)
                     if newRow >= 0 && newRow < 8 && newCol >= 0 && newCol < 8 {
-                        if board[newRow][newCol]?.color != currentPiece?.color {
+                        if targetBoard[newRow][newCol]?.color != currentPiece?.color {
                             legalMoves.append((newRow, newCol))
                         }
                     }
