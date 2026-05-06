@@ -22,6 +22,10 @@ struct ChessboardLogic {
     var moveNum: Int = 0
     var whiteKingMoved: Bool = false
     var blackKingMoved: Bool = false
+    var whiteLeftRookMoved = false
+    var whiteRightRookMoved = false
+    var blackLeftRookMoved = false
+    var blackRightRookMoved = false
     
     //Property to keep track the previous move for highlighting
     var lastMove: (from: (Int, Int), to: (Int, Int))?
@@ -80,6 +84,34 @@ struct ChessboardLogic {
                     }
                     else{
                         blackKingMoved = true
+                    }
+                }
+                
+                //If rook has moved
+                if piece.type == .rook {
+                    if piece.color == .white {
+                        if from == (7,0) { whiteLeftRookMoved = true }
+                        if from == (7,7) { whiteRightRookMoved = true }
+                    } else {
+                        if from == (0,0) { blackLeftRookMoved = true }
+                        if from == (0,7) { blackRightRookMoved = true }
+                    }
+                }
+                
+                // Handle castling move
+                if piece.type == .king {
+                    let row = from.0
+                    
+                    // King side castle
+                    if to == (row, 6) {
+                        board[row][5] = board[row][7] // move rook
+                        board[row][7] = nil
+                    }
+                    
+                    // Queen side castle
+                    if to == (row, 2) {
+                        board[row][3] = board[row][0] // move rook
+                        board[row][0] = nil
                     }
                 }
             }
@@ -318,6 +350,50 @@ struct ChessboardLogic {
                     }
                 }
             }
+        
+        // Castling
+        if let piece = currentPiece {
+            let row = (piece.color == .white) ? 7 : 0
+            
+            // Checks king moved based on color
+            let kingMoved = (piece.color == .white) ? whiteKingMoved : blackKingMoved
+            
+            if !kingMoved && row == row {
+                
+                // king side short castle
+                let rookMovedRight = (piece.color == .white) ? whiteRightRookMoved : blackRightRookMoved
+                
+                if !rookMovedRight &&
+                   targetBoard[row][5] == nil &&
+                   targetBoard[row][6] == nil {
+                    
+                    // squares not attacked
+                    if !isSquareAttacked(row: row, col: 4, by: opposite(piece.color), on: targetBoard) &&
+                       !isSquareAttacked(row: row, col: 5, by: opposite(piece.color), on: targetBoard) &&
+                       !isSquareAttacked(row: row, col: 6, by: opposite(piece.color), on: targetBoard) {
+                        
+                        legalMoves.append((row, 6))
+                    }
+                }
+                
+                // queen side long castle
+                let rookMovedLeft = (piece.color == .white) ? whiteLeftRookMoved : blackLeftRookMoved
+                
+                if !rookMovedLeft &&
+                   targetBoard[row][1] == nil &&
+                   targetBoard[row][2] == nil &&
+                   targetBoard[row][3] == nil {
+                    
+                    // squares not attacked
+                    if !isSquareAttacked(row: row, col: 4, by: opposite(piece.color), on: targetBoard) &&
+                       !isSquareAttacked(row: row, col: 3, by: opposite(piece.color), on: targetBoard) &&
+                       !isSquareAttacked(row: row, col: 2, by: opposite(piece.color), on: targetBoard) {
+                        
+                        legalMoves.append((row, 2))
+                    }
+                }
+            }
+        }
             
         
             return legalMoves
@@ -383,6 +459,10 @@ struct ChessboardLogic {
           }
           return nil
       }
+    
+    func opposite(_ color: PieceColor) -> PieceColor {
+        return color == .white ? .black : .white
+    }
 
 }
 
