@@ -22,6 +22,7 @@ struct ChessboardLogic {
     var moveNum: Int = 0
     var whiteKingMoved: Bool = false
     var blackKingMoved: Bool = false
+    var enPassantTarget: (Int, Int)? = nil
     
     //Property to keep track the previous move for highlighting
     var lastMove: (from: (Int, Int), to: (Int, Int))?
@@ -59,28 +60,46 @@ struct ChessboardLogic {
     mutating func move(from: (Int, Int), to: (Int, Int)) {
             guard let piece = board[from.0][from.1], piece.color == currentTurn else { return }
             
-            
-            // Gets pseudo legal moves based on piece type and location
             let pseudoMoves = isLegal(row: from.0, col: from.1, targetBoard: self.board)
-            
-            //Filter for if the move puts King safety at risk (Pins, etc.)
             let legalMoves = isCheckSafe(from: from, pseudoMoves: pseudoMoves)
             
-            // Checks if we have a list of legal moves for the selected piece
-            if legalMoves.contains(where: { $0 == to }) {
-                history.append(board)
-                board[to.0][to.1] = piece
-                board[from.0][from.1] = nil
-                lastMove = (from, to)
-                currentTurn = (currentTurn == .white) ? .black : .white
-                //Check if king has moved
-                if piece.type == .king{
-                    if piece.color == .white{
-                        whiteKingMoved = true
-                    }
-                    else{
-                        blackKingMoved = true
-                    }
+            guard legalMoves.contains(where: { $0 == to }) else { return }
+            
+            history.append(board)
+            
+            // EN PASSANT capture
+            if piece.type == .pawn, let ep = enPassantTarget, to == ep {
+                let direction = (piece.color == .white) ? 1 : -1
+                let capturedRow = to.0 + direction
+                board[capturedRow][to.1] = nil
+            }
+            
+            board[to.0][to.1] = piece
+            board[from.0][from.1] = nil
+            
+            lastMove = (from, to)
+            
+            // EN PASSANT: reset by default
+            enPassantTarget = nil
+            
+            // EN PASSANT: set if pawn double moves
+            if piece.type == .pawn {
+                let startRow = from.0
+                let endRow = to.0
+                
+                if abs(startRow - endRow) == 2 {
+                    let middleRow = (startRow + endRow) / 2
+                    enPassantTarget = (middleRow, from.1)
+                }
+            }
+            
+            currentTurn = (currentTurn == .white) ? .black : .white
+            
+            if piece.type == .king {
+                if piece.color == .white {
+                    whiteKingMoved = true
+                } else {
+                    blackKingMoved = true
                 }
             }
         }
@@ -161,6 +180,18 @@ struct ChessboardLogic {
                 if (0..<8).contains(newRow) && (0..<8).contains(newCol) {
                     if let target = targetBoard[newRow][newCol],
                        target.color != currentPiece.color {
+                        legalMoves.append((newRow, newCol))
+                    }
+                }
+            }
+        
+            // En passant
+            for dCol in [-1, 1] {
+                let newCol = col + dCol
+                let newRow = row + direction
+                
+                if let target = enPassantTarget {
+                    if target == (newRow, newCol) {
                         legalMoves.append((newRow, newCol))
                     }
                 }
