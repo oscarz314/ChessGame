@@ -13,6 +13,7 @@ struct ChessPiece: Identifiable, Hashable {
     let id = UUID()
     let type: PieceType
     let color: PieceColor
+    var hasMoved: Bool = false
     
     var imageName: String {
         "\(color.rawValue)_\(type.rawValue)"

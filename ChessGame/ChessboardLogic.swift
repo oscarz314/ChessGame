@@ -20,16 +20,16 @@ struct ChessboardLogic {
     var currentTurn: PieceColor = .white
     var history: [Board] = []
     var moveNum: Int = 0
-    var whiteKingMoved: Bool = false
-    var blackKingMoved: Bool = false
-    var whiteLeftRookMoved = false
-    var whiteRightRookMoved = false
-    var blackLeftRookMoved = false
-    var blackRightRookMoved = false
     var enPassantTarget: (Int, Int)? = nil
+    var enPassantCaptureSquare: (Int, Int)? = nil
     
     //Property to keep track the previous move for highlighting
-    var lastMove: (from: (Int, Int), to: (Int, Int))?
+    var lastMove: (
+        from: (Int, Int),
+        to: (Int, Int),
+        piece: ChessPiece
+    )?
+
     
     init() {
         setupBoard()
@@ -62,79 +62,96 @@ struct ChessboardLogic {
     }
     
     mutating func move(from: (Int, Int), to: (Int, Int)) {
-            guard let piece = board[from.0][from.1], piece.color == currentTurn else { return }
-            
-            let pseudoMoves = isLegal(row: from.0, col: from.1, targetBoard: self.board)
-            let legalMoves = isCheckSafe(from: from, pseudoMoves: pseudoMoves)
-            
-            guard legalMoves.contains(where: { $0 == to }) else { return }
-            
+
+        guard let piece = board[from.0][from.1],
+              piece.color == currentTurn else { return }
+
+        // Gets pseudo legal moves based on piece type and location
+        let pseudoMoves = isLegal(
+            row: from.0,
+            col: from.1,
+            targetBoard: self.board
+        )
+
+        // Filter for if the move puts King safety at risk
+        let legalMoves = isCheckSafe(
+            from: from,
+            pseudoMoves: pseudoMoves
+        )
+
+        // Checks if move is legal
+        if legalMoves.contains(where: { $0 == to }) {
+
             history.append(board)
-            
-            // EN PASSANT capture
-            if piece.type == .pawn, let ep = enPassantTarget, to == ep {
-                let direction = (piece.color == .white) ? 1 : -1
-                let capturedRow = to.0 + direction
-                board[capturedRow][to.1] = nil
+
+            // EN PASSANT
+            if piece.type == .pawn,
+               from.1 != to.1,
+               board[to.0][to.1] == nil,
+               let captureSquare = enPassantCaptureSquare,
+               captureSquare == (from.0, to.1) {
+
+                board[from.0][to.1] = nil
             }
             
-            board[to.0][to.1] = piece
+            // CASTLING
+            if piece.type == .king,
+               abs(to.1 - from.1) == 2 {
+
+                // Kingside
+                if to.1 == 6 {
+
+                    board[from.0][5] = board[from.0][7]
+                    board[from.0][7] = nil
+
+                    board[from.0][5]?.hasMoved = true
+                }
+
+                // Queenside
+                else if to.1 == 2 {
+
+                    board[from.0][3] = board[from.0][0]
+                    board[from.0][0] = nil
+
+                    board[from.0][3]?.hasMoved = true
+                }
+            }
+
+            var movedPiece = piece
+            movedPiece.hasMoved = true
+
+            board[to.0][to.1] = movedPiece
             board[from.0][from.1] = nil
+
+            lastMove = (
+                from: from,
+                to: to,
+                piece: movedPiece
+            )
             
-            lastMove = (from, to)
-            
-            // EN PASSANT: reset by default
-            enPassantTarget = nil
-            
-            // EN PASSANT: set if pawn double moves
-            if piece.type == .pawn {
-                let startRow = from.0
-                let endRow = to.0
-                
-                if abs(startRow - endRow) == 2 {
-                    let middleRow = (startRow + endRow) / 2
-                    enPassantTarget = (middleRow, from.1)
-                }
+            // Set en passant target
+            if piece.type == .pawn && abs(to.0 - from.0) == 2 {
+
+                // square pawn passes through
+                enPassantTarget = (
+                    (from.0 + to.0) / 2,
+                    from.1
+                )
+
+                // square of pawn that can be captured via en passant
+                enPassantCaptureSquare = to
+            } else {
+                enPassantTarget = nil
+                enPassantCaptureSquare = nil
             }
             
-            currentTurn = (currentTurn == .white) ? .black : .white
+            currentTurn = (currentTurn == .white)
+                ? .black
+                : .white
             
-            if piece.type == .king {
-                if piece.color == .white {
-                    whiteKingMoved = true
-                } else {
-                    blackKingMoved = true
-                }
-                
-                //If rook has moved
-                if piece.type == .rook {
-                    if piece.color == .white {
-                        if from == (7,0) { whiteLeftRookMoved = true }
-                        if from == (7,7) { whiteRightRookMoved = true }
-                    } else {
-                        if from == (0,0) { blackLeftRookMoved = true }
-                        if from == (0,7) { blackRightRookMoved = true }
-                    }
-                }
-                
-                // Handle castling move
-                if piece.type == .king {
-                    let row = from.0
-                    
-                    // King side castle
-                    if to == (row, 6) {
-                        board[row][5] = board[row][7] // move rook
-                        board[row][7] = nil
-                    }
-                    
-                    // Queen side castle
-                    if to == (row, 2) {
-                        board[row][3] = board[row][0] // move rook
-                        board[row][0] = nil
-                    }
-                }
-            }
         }
+    }
+
 
         
     func isLegal(row: Int, col: Int, targetBoard: Board) -> [(Int, Int)] {
@@ -157,77 +174,122 @@ struct ChessboardLogic {
         }
         
     func isCheckSafe(from: (Int, Int), pseudoMoves: [(Int, Int)]) -> [(Int, Int)] {
-            guard let piece = board[from.0][from.1] else { return [] }
-            var safeMoves: [(Int, Int)] = []
 
-            for move in pseudoMoves {
-                // Simulate the move on a temporary board
-                var tempBoard = self.board
-                tempBoard[move.0][move.1] = piece
-                tempBoard[from.0][from.1] = nil
-
-                // Find our King's position on this simulated board
-                if let kingPos = findKing(color: piece.color, on: tempBoard) {
-                    let enemyColor: PieceColor = (piece.color == .white) ? .black : .white
-                    
-                    // If the enemy cannot attack the King after this move, it is legal
-                    if !isSquareAttacked(row: kingPos.0, col: kingPos.1, by: enemyColor, on: tempBoard) {
-                        safeMoves.append(move)
-                    }
-                }
-            }
-            return safeMoves
+        guard let piece = board[from.0][from.1] else {
+            return []
         }
 
+        var safeMoves: [(Int, Int)] = []
+
+        for move in pseudoMoves {
+
+            // Simulate move on temporary board
+            var tempBoard = self.board
+
+            // EN PASSANT simulation
+            if piece.type == .pawn,
+               from.1 != move.1,
+               let captureSquare = enPassantCaptureSquare,
+               captureSquare == (from.0, move.1) {
+
+                tempBoard[from.0][move.1] = nil
+            }
+            
+            
+
+            // CASTLING simulation
+            if piece.type == .king,
+               abs(move.1 - from.1) == 2 {
+
+                // Kingside
+                if move.1 == 6 {
+
+                    tempBoard[from.0][5] = tempBoard[from.0][7]
+                    tempBoard[from.0][7] = nil
+                }
+
+                // Queenside
+                else if move.1 == 2 {
+
+                    tempBoard[from.0][3] = tempBoard[from.0][0]
+                    tempBoard[from.0][0] = nil
+                }
+            }
+
+            tempBoard[move.0][move.1] = piece
+            tempBoard[from.0][from.1] = nil
+
+            // Find king position after move
+            if let kingPos = findKing(
+                color: piece.color,
+                on: tempBoard
+            ) {
+
+                let enemyColor: PieceColor =
+                    (piece.color == .white)
+                    ? .black
+                    : .white
+
+                // If king is NOT attacked, move is safe
+                if !isSquareAttacked(
+                    row: kingPos.0,
+                    col: kingPos.1,
+                    by: enemyColor,
+                    on: tempBoard
+                ) {
+
+                    safeMoves.append(move)
+                }
+            }
+        }
+
+        return safeMoves
+    }
         
     func islegalPawn(row: Int, col: Int, targetBoard:Board) -> [(Int, Int)] {
-            var legalMoves: [(Int, Int)] = []
-            
-            guard let currentPiece = targetBoard[row][col] else { return [] }
-            
-            let direction = (currentPiece.color == .white) ? -1 : 1
-            
-            let oneStep = row + direction
-            
-            // move forward
-            if (0..<8).contains(oneStep) && targetBoard[oneStep][col] == nil {
-                legalMoves.append((oneStep, col))
-                
-                // move 2 spaces
-                let twoStep = row + 2 * direction
-                if (currentPiece.color == .white && row == 6) ||
-                   (currentPiece.color == .black && row == 1) {
-                    
-                    if (0..<8).contains(twoStep) && targetBoard[twoStep][col] == nil {
-                        legalMoves.append((twoStep, col))
-                    }
-                }
-            }
-            
-            // diagonal capture
-            for dCol in [-1, 1] {
-                let newRow = row + direction
-                let newCol = col + dCol
-                
-                if (0..<8).contains(newRow) && (0..<8).contains(newCol) {
-                    if let target = targetBoard[newRow][newCol],
-                       target.color != currentPiece.color {
-                        legalMoves.append((newRow, newCol))
-                    }
-                }
-            }
+        var legalMoves: [(Int, Int)] = []
+        guard let currentPiece = targetBoard[row][col] else { return [] }
+        let direction = (currentPiece.color == .white) ? -1 : 1
+        let oneStep = row + direction
         
-            // En passant
-            for dCol in [-1, 1] {
-                let newCol = col + dCol
-                let newRow = row + direction
+        // move forward
+        if (0..<8).contains(oneStep) && targetBoard[oneStep][col] == nil {
+            legalMoves.append((oneStep, col))
+            
+            // move 2 spaces
+            let twoStep = row + 2 * direction
+            if (currentPiece.color == .white && row == 6) ||
+               (currentPiece.color == .black && row == 1) {
                 
-                if let target = enPassantTarget {
-                    if target == (newRow, newCol) {
-                        legalMoves.append((newRow, newCol))
-                    }
+                if (0..<8).contains(twoStep) && targetBoard[twoStep][col] == nil {
+                    legalMoves.append((twoStep, col))
                 }
             }
+        }
+        
+        // diagonal capture
+        for dCol in [-1, 1] {
+            let newRow = row + direction
+            let newCol = col + dCol
+            
+            if (0..<8).contains(newRow) && (0..<8).contains(newCol) {
+                if let target = targetBoard[newRow][newCol],
+                   target.color != currentPiece.color {
+                    legalMoves.append((newRow, newCol))
+                }
+            }
+        }
+    
+        // En passant
+        for dCol in [-1, 1] {
+            let newCol = col + dCol
+            let newRow = row + direction
+            
+            if let target = enPassantTarget,
+               target == (newRow, newCol) {
+                legalMoves.append((newRow, newCol))
+            }
+        }
             
             return legalMoves
         }
@@ -362,73 +424,76 @@ struct ChessboardLogic {
         }
         
     func islegalKing(row: Int, col:Int, targetBoard: Board) -> [(Int, Int)] {
-            var legalMoves: [(Int, Int)] = []
-            let currentPiece = targetBoard[row][col]
-            
-            for dRow in -1...1 {
-                for dCol in -1...1 {
-                    // Skip the current square
-                    if dRow == 0 && dCol == 0 { continue }
-                    
-                    let newRow = row + dRow
-                    let newCol = col + dCol
-                    
-                    // Check bounds (0 to 7)
-                    if newRow >= 0 && newRow < 8 && newCol >= 0 && newCol < 8 {
-                        if targetBoard[newRow][newCol]?.color != currentPiece?.color {
-                            legalMoves.append((newRow, newCol))
-                        }
-                    }
+
+        var legalMoves: [(Int, Int)] = []
+        guard let currentPiece = targetBoard[row][col] else {
+            return []
+        }
+
+        // Normal king movement
+        for dRow in -1...1 {
+            for dCol in -1...1 {
+                // Skip current square
+                if dRow == 0 && dCol == 0 {
+                    continue
                 }
-            }
-        
-        // Castling
-        if let piece = currentPiece {
-            let row = (piece.color == .white) ? 7 : 0
-            
-            // Checks king moved based on color
-            let kingMoved = (piece.color == .white) ? whiteKingMoved : blackKingMoved
-            
-            if !kingMoved && row == row {
-                
-                // king side short castle
-                let rookMovedRight = (piece.color == .white) ? whiteRightRookMoved : blackRightRookMoved
-                
-                if !rookMovedRight &&
-                   targetBoard[row][5] == nil &&
-                   targetBoard[row][6] == nil {
-                    
-                    // squares not attacked
-                    if !isSquareAttacked(row: row, col: 4, by: opposite(piece.color), on: targetBoard) &&
-                       !isSquareAttacked(row: row, col: 5, by: opposite(piece.color), on: targetBoard) &&
-                       !isSquareAttacked(row: row, col: 6, by: opposite(piece.color), on: targetBoard) {
-                        
-                        legalMoves.append((row, 6))
-                    }
-                }
-                
-                // queen side long castle
-                let rookMovedLeft = (piece.color == .white) ? whiteLeftRookMoved : blackLeftRookMoved
-                
-                if !rookMovedLeft &&
-                   targetBoard[row][1] == nil &&
-                   targetBoard[row][2] == nil &&
-                   targetBoard[row][3] == nil {
-                    
-                    // squares not attacked
-                    if !isSquareAttacked(row: row, col: 4, by: opposite(piece.color), on: targetBoard) &&
-                       !isSquareAttacked(row: row, col: 3, by: opposite(piece.color), on: targetBoard) &&
-                       !isSquareAttacked(row: row, col: 2, by: opposite(piece.color), on: targetBoard) {
-                        
-                        legalMoves.append((row, 2))
+
+                let newRow = row + dRow
+                let newCol = col + dCol
+
+                // check bouunds (0 to 7)
+                if (0..<8).contains(newRow) && (0..<8).contains(newCol) {
+                    // Cannot capture own piece
+                    if targetBoard[newRow][newCol]?.color != currentPiece.color {
+                        legalMoves.append((newRow, newCol))
                     }
                 }
             }
         }
-            
-        
-            return legalMoves
+
+        // CASTLING
+        if !currentPiece.hasMoved {
+
+            let enemyColor = opposite(currentPiece.color)
+
+            // Kingside castle
+            if let rook = targetBoard[row][7],
+               rook.type == .rook,
+               rook.color == currentPiece.color,
+               !rook.hasMoved,
+               targetBoard[row][5] == nil,
+               targetBoard[row][6] == nil {
+
+                // King cannot castle through check
+                if !isSquareAttacked(row: row, col: 4, by: enemyColor, on: targetBoard) &&
+                   !isSquareAttacked(row: row, col: 5, by: enemyColor, on: targetBoard) &&
+                   !isSquareAttacked(row: row, col: 6, by: enemyColor, on: targetBoard) {
+
+                    legalMoves.append((row, 6))
+                }
+            }
+
+            // Queenside castle
+            if let rook = targetBoard[row][0],
+               rook.type == .rook,
+               rook.color == currentPiece.color,
+               !rook.hasMoved,
+               targetBoard[row][1] == nil,
+               targetBoard[row][2] == nil,
+               targetBoard[row][3] == nil {
+
+                // King cannot castle through check
+                if !isSquareAttacked(row: row, col: 4, by: enemyColor, on: targetBoard) &&
+                   !isSquareAttacked(row: row, col: 3, by: enemyColor, on: targetBoard) &&
+                   !isSquareAttacked(row: row, col: 2, by: enemyColor, on: targetBoard) {
+
+                    legalMoves.append((row, 2))
+                }
+            }
         }
+
+        return legalMoves
+    }
     
     mutating func moveAndPromote(from: (Int, Int), to: (Int, Int), promoteTo: PieceType) {
 
@@ -481,10 +546,32 @@ struct ChessboardLogic {
                     }
                     
                 } else {
-                    let attacks = isLegal(row: r, col: c, targetBoard: targetBoard)
-                    
-                    if attacks.contains(where: { $0 == (row, col) }) {
-                        return true
+                    switch piece.type {
+
+                    case .pawn:
+                        let direction = (piece.color == .white) ? -1 : 1
+                        if (r + direction == row) && abs(c - col) == 1 {
+                            return true
+                        }
+
+                    case .knight:
+                        return islegalKnight(row: r, col: c, targetBoard: targetBoard)
+                            .contains(where: { $0 == (row, col) })
+
+                    case .bishop:
+                        return islegalBishop(row: r, col: c, targetBoard: targetBoard)
+                            .contains(where: { $0 == (row, col) })
+
+                    case .rook:
+                        return islegalRook(row: r, col: c, targetBoard: targetBoard)
+                            .contains(where: { $0 == (row, col) })
+
+                    case .queen:
+                        return islegalQueen(row: r, col: c, targetBoard: targetBoard)
+                            .contains(where: { $0 == (row, col) })
+
+                    case .king:
+                        return max(abs(r - row), abs(c - col)) == 1
                     }
                 }
             }
