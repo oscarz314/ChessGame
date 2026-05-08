@@ -149,7 +149,59 @@ struct ChessboardLogic {
                 ? .black
                 : .white
             
+            print(checkGameState(currentBoard: board, currentHistory: history))
         }
+    }
+    
+    func checkGameState(currentBoard:Board, currentHistory: [Board]) -> String{
+        //use history to check for current color
+        var currentCheckColor:PieceColor = .white
+        
+        if (history.count % 2 == 0){
+            currentCheckColor = .black
+        }
+        else{
+            currentCheckColor = .white
+        }
+        
+        //check for checkmate
+        let kingPosition = findKing(color: currentCheckColor, on: currentBoard)
+        var isCheckmated = true
+        
+        for row in 0..<8 {
+            for col in 0..<8 {
+                let currentPiece = currentBoard[row][col]
+                //check if is player that needs to be checked color
+                if(isSquareAttacked(row: kingPosition!.0, col: kingPosition!.1, by: currentCheckColor, on: currentBoard)){
+                    if (currentPiece?.color == currentCheckColor){
+                        // Gets pseudo legal moves based on piece type and location
+                        let pseudoMoves = isLegal(
+                            row: row,
+                            col: col,
+                            targetBoard: self.board
+                        )
+                        
+                        // Filter for if the move puts King safety at risk
+                        let legalMoves = isCheckSafe(
+                            from: (row, col),
+                            pseudoMoves: pseudoMoves
+                        )
+                        
+                        //
+                        if (legalMoves.count > 0){
+                            isCheckmated = false;
+                            break;
+                        }
+                    }
+                }
+            }
+        }
+        
+        if (isCheckmated) {
+            return "checkmated"
+        }
+        
+        return "ongoing"
     }
 
 
