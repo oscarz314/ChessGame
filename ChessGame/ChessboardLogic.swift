@@ -220,8 +220,6 @@ struct ChessboardLogic {
                 tempBoard[from.0][move.1] = nil
             }
             
-            
-
             // CASTLING simulation
             if piece.type == .king,
                abs(move.1 - from.1) == 2 {
@@ -552,56 +550,77 @@ struct ChessboardLogic {
     }
     
     //Helper methods
-    func isSquareAttacked(row: Int, col: Int, by color: PieceColor, on targetBoard: Board) -> Bool {
-        
+    func isSquareAttacked(
+        row: Int,
+        col: Int,
+        by color: PieceColor,
+        on targetBoard: Board
+    ) -> Bool {
+
         for r in 0..<8 {
             for c in 0..<8 {
-                guard let piece = targetBoard[r][c], piece.color == color else { continue }
-                
-                if piece.type == .pawn {
+
+                guard let piece = targetBoard[r][c],
+                      piece.color == color else { continue }
+
+                switch piece.type {
+
+                case .pawn:
                     let direction = (piece.color == .white) ? -1 : 1
-                    
+
                     for dCol in [-1, 1] {
                         let attackRow = r + direction
                         let attackCol = c + dCol
-                        
+
                         if attackRow == row && attackCol == col {
                             return true
                         }
                     }
-                    
-                } else {
-                    switch piece.type {
 
-                    case .pawn:
-                        let direction = (piece.color == .white) ? -1 : 1
-                        if (r + direction == row) && abs(c - col) == 1 {
-                            return true
-                        }
+                case .knight:
+                    if islegalKnight(
+                        row: r,
+                        col: c,
+                        targetBoard: targetBoard
+                    ).contains(where: { $0 == (row, col) }) {
+                        return true
+                    }
 
-                    case .knight:
-                        return islegalKnight(row: r, col: c, targetBoard: targetBoard)
-                            .contains(where: { $0 == (row, col) })
+                case .bishop:
+                    if islegalBishop(
+                        row: r,
+                        col: c,
+                        targetBoard: targetBoard
+                    ).contains(where: { $0 == (row, col) }) {
+                        return true
+                    }
 
-                    case .bishop:
-                        return islegalBishop(row: r, col: c, targetBoard: targetBoard)
-                            .contains(where: { $0 == (row, col) })
+                case .rook:
+                    if islegalRook(
+                        row: r,
+                        col: c,
+                        targetBoard: targetBoard
+                    ).contains(where: { $0 == (row, col) }) {
+                        return true
+                    }
 
-                    case .rook:
-                        return islegalRook(row: r, col: c, targetBoard: targetBoard)
-                            .contains(where: { $0 == (row, col) })
+                case .queen:
+                    if islegalQueen(
+                        row: r,
+                        col: c,
+                        targetBoard: targetBoard
+                    ).contains(where: { $0 == (row, col) }) {
+                        return true
+                    }
 
-                    case .queen:
-                        return islegalQueen(row: r, col: c, targetBoard: targetBoard)
-                            .contains(where: { $0 == (row, col) })
-
-                    case .king:
-                        return max(abs(r - row), abs(c - col)) == 1
+                case .king:
+                    if max(abs(r - row), abs(c - col)) == 1 {
+                        return true
                     }
                 }
             }
         }
-        
+
         return false
     }
 
