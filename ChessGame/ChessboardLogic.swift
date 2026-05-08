@@ -22,6 +22,7 @@ struct ChessboardLogic {
     var moveNum: Int = 0
     var enPassantTarget: (Int, Int)? = nil
     var enPassantCaptureSquare: (Int, Int)? = nil
+    var pendingPromotion: (from: (Int, Int), to: (Int, Int))?
     
     //Property to keep track the previous move for highlighting
     var lastMove: (
@@ -121,6 +122,7 @@ struct ChessboardLogic {
             movedPiece.hasMoved = true
 
             board[to.0][to.1] = movedPiece
+                    
             board[from.0][from.1] = nil
 
             lastMove = (
@@ -151,8 +153,31 @@ struct ChessboardLogic {
             
         }
     }
+    
+    mutating func promotePendingPawn(to type: PieceType) {
+        guard let coords = pendingPromotion else { return }
+        
+        // Execute the move with the chosen piece type
+        executeMove(from: coords.from, to: coords.to, promotionType: type)
+        pendingPromotion = nil
+    }
 
+    mutating func executeMove(from: (Int, Int), to: (Int, Int), promotionType: PieceType?) {
+        guard var movedPiece = board[from.0][from.1] else { return }
+        
+        // If a promotion type was provided, change the piece
+        if let promotionType = promotionType {
+            movedPiece = ChessPiece(type: promotionType, color: movedPiece.color)
+        }
+        
+        movedPiece.hasMoved = true
+        board[to.0][to.1] = movedPiece
+        board[from.0][from.1] = nil
+        
+        // ... (En Passant / Castling logic stays here) ...
 
+        currentTurn = (currentTurn == .white) ? .black : .white
+    }
         
     func isLegal(row: Int, col: Int, targetBoard: Board) -> [(Int, Int)] {
             guard let piece = targetBoard[row][col] else { return [] }

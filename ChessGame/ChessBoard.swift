@@ -144,76 +144,89 @@ struct ChessBoard: View {
         }
         
         //Drag and drop pieces
-        func handleDrop(item: (piece: ChessPiece, row: Int, col: Int),
-                        translation: CGSize,
-                        squareSize: CGFloat) {
-            
-            let colChange = Int((translation.width / squareSize).rounded())
-            let rowChange = Int((translation.height / squareSize).rounded())
-            
-            let newRow = item.row + rowChange
-            let newCol = item.col + colChange
-            
-            // Stay inside board
-            guard (0..<8).contains(newRow), (0..<8).contains(newCol) else { return }
-            guard newRow != item.row || newCol != item.col else { return }
-            
-            if item.piece.type == .pawn && (newRow == 0 || newRow == 7) {
-                game.move(from: (item.row, item.col), to: (newRow, newCol))
-                
-                pendingPromotion = (from: (newRow, newCol), to: (newRow, newCol))
-                showingPromotionSelection = true
-            } else {
-                game.move(from: (item.row, item.col), to: (newRow, newCol))
-            }
-                        
+    func handleDrop(item: (piece: ChessPiece, row: Int, col: Int),
+                    translation: CGSize,
+                    squareSize: CGFloat) {
         
+        let colChange = Int((translation.width / squareSize).rounded())
+        let rowChange = Int((translation.height / squareSize).rounded())
+        
+        let newRow = item.row + rowChange
+        let newCol = item.col + colChange
+        
+        guard (0..<8).contains(newRow), (0..<8).contains(newCol),
+              (newRow != item.row || newCol != item.col) else {
+            dragOffset = .zero
+            return
+        }
+        
+        let isPromotion = item.piece.type == .pawn && (newRow == 0 || newRow == 7)
+        
+        if isPromotion {
+            pendingPromotion = (from: (item.row, item.col), to: (newRow, newCol))
+            showingPromotionSelection = true
+        } else {
+            game.move(from: (item.row, item.col), to: (newRow, newCol))
+        }
+        
+        dragOffset = .zero
+        selectedPiece = nil
     }
     
     func handleTapMove(row: Int, col: Int) {
-        
-        // If a piece is already selected → try to move
-        if let selected = selectedPiece {
-            
-            let legalMoves = game.isLegal(row: selected.row, col: selected.col, targetBoard: game.board)
-            
-            // If tapped square is a legal move → move
-            if legalMoves.contains(where: { $0 == (row, col) }) {
-                game.move(from: (selected.row, selected.col), to: (row, col))
-                selectedPiece = nil
-                return
-            }
-            
-            // If tapping another piece of same color → switch selection
-            if let newPiece = game.board[row][col],
-               newPiece.color == game.currentTurn {
-                selectedPiece = (newPiece, row, col)
-                return
-            }
-            
-            // Otherwise deselect
-            selectedPiece = nil
-        }
-        
-        // If nothing selected → select piece
-        else {
-            if let piece = game.board[row][col],
-               piece.color == game.currentTurn {
+        guard let selected = selectedPiece else {
+            if let piece = game.board[row][col], piece.color == game.currentTurn {
                 selectedPiece = (piece, row, col)
             }
+            return
+        }
+        
+        let from = (selected.row, selected.col)
+        let to = (row, col)
+        
+        // Check if it's a legal move
+        let legalMoves = game.isLegal(row: selected.row, col: selected.col, targetBoard: game.board)
+        guard legalMoves.contains(where: { $0 == to }) else {
+            // Tap on own piece → switch selection
+            if let newPiece = game.board[row][col], newPiece.color == game.currentTurn {
+                selectedPiece = (newPiece, row, col)
+            } else {
+                selectedPiece = nil
+            }
+            return
+        }
+        
+        // Promotion?
+        if selected.piece.type == .pawn && (to.0 == 0 || to.0 == 7) {
+            pendingPromotion = (from: from, to: to)
+            showingPromotionSelection = true
+        } else {
+            game.move(from: from, to: to)
+            selectedPiece = nil
         }
     }
     
-    
-    
-    
     func promote(to type: PieceType) {
-            if let move = pendingPromotion {
-                game.board[move.to.row][move.to.col] = ChessPiece(type: type, color: move.to.row == 0 ? .white : .black)
-            }
+        guard let pending = pendingPromotion,
+              let color = game.board[pending.from.row][pending.from.col]?.color else {
             pendingPromotion = nil
+            return
         }
-}
+        
+        let newPiece = ChessPiece(type: type, color: color)
+        
+        game.board[pending.from.row][pending.from.col] = nil
+        game.board[pending.to.row][pending.to.col] = newPiece
+        
+        game.lastMove = (from: pending.from, to: pending.to, piece: newPiece)
+        
+        // Switch turn
+        game.currentTurn = (game.currentTurn == .white) ? .black : .white
+        
+        pendingPromotion = nil
+        selectedPiece = nil
+        showingPromotionSelection = false
+    }}
 
 #Preview {
     ChessBoard()
