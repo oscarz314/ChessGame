@@ -12,7 +12,6 @@ struct ChessBoard: View {
     //Board size 8 by 8
     let size = 8
     @State private var showingPromotionSelection = false
-    @State private var pendingPromotion: (from: (row: Int, col: Int), to: (row: Int, col: Int))?
     @State private var game = ChessboardLogic()
     
     //Current piece
@@ -21,7 +20,7 @@ struct ChessBoard: View {
     
     var legalMovesForSelected: [(Int, Int)] {
         guard let selected = selectedPiece else { return [] }
-        var legalMoves = game.isLegal(row: selected.row, col: selected.col, targetBoard: game.board)
+        let legalMoves = game.isLegal(row: selected.row, col: selected.col, targetBoard: game.board)
         return game.isCheckSafe(from: (selected.row, selected.col), pseudoMoves: legalMoves)
     }
     
@@ -99,9 +98,6 @@ struct ChessBoard: View {
                                     y: CGFloat(item.row) * squareSize + (squareSize / 2) + (isSelected ? dragOffset.height : 0)
                                 )
                                 .onTapGesture {
-                                    if (item.piece.color == game.currentTurn) {
-                                        selectedPiece = item
-                                    }
                                     handleTapMove(row: item.row, col: item.col)
                                 }
                                 .gesture(
@@ -134,7 +130,7 @@ struct ChessBoard: View {
             Button("Knight") { promote(to: .knight) }
             Button("Rook") { promote(to: .rook) }
             Button("Bishop") { promote(to: .bishop) }
-            Button("Cancel", role: .cancel) { pendingPromotion = nil }
+            Button("Cancel", role: .cancel) { game.pendingPromotion = nil }
         }
     }
         
@@ -160,13 +156,10 @@ struct ChessBoard: View {
             return
         }
         
-        let isPromotion = item.piece.type == .pawn && (newRow == 0 || newRow == 7)
+        game.move(from: (item.row, item.col), to: (newRow, newCol))
         
-        if isPromotion {
-            pendingPromotion = (from: (item.row, item.col), to: (newRow, newCol))
+        if game.pendingPromotion != nil {
             showingPromotionSelection = true
-        } else {
-            game.move(from: (item.row, item.col), to: (newRow, newCol))
         }
         
         dragOffset = .zero
@@ -185,7 +178,8 @@ struct ChessBoard: View {
         let to = (row, col)
         
         // Check if it's a legal move
-        let legalMoves = game.isLegal(row: selected.row, col: selected.col, targetBoard: game.board)
+        let pseudoMoves = game.isLegal(row: selected.row, col: selected.col, targetBoard: game.board)
+        let legalMoves = game.isCheckSafe(from: from, pseudoMoves: pseudoMoves)
         guard legalMoves.contains(where: { $0 == to }) else {
             // Tap on own piece → switch selection
             if let newPiece = game.board[row][col], newPiece.color == game.currentTurn {
@@ -197,33 +191,18 @@ struct ChessBoard: View {
         }
         
         // Promotion?
-        if selected.piece.type == .pawn && (to.0 == 0 || to.0 == 7) {
-            pendingPromotion = (from: from, to: to)
+        game.move(from: from, to: to)
+
+        if game.pendingPromotion != nil {
             showingPromotionSelection = true
-        } else {
-            game.move(from: from, to: to)
-            selectedPiece = nil
         }
+
+        selectedPiece = nil
     }
     
     func promote(to type: PieceType) {
-        guard let pending = pendingPromotion,
-              let color = game.board[pending.from.row][pending.from.col]?.color else {
-            pendingPromotion = nil
-            return
-        }
+        game.promotePendingPawn(to: type)
         
-        let newPiece = ChessPiece(type: type, color: color)
-        
-        game.board[pending.from.row][pending.from.col] = nil
-        game.board[pending.to.row][pending.to.col] = newPiece
-        
-        game.lastMove = (from: pending.from, to: pending.to, piece: newPiece)
-        
-        // Switch turn
-        game.currentTurn = (game.currentTurn == .white) ? .black : .white
-        
-        pendingPromotion = nil
         selectedPiece = nil
         showingPromotionSelection = false
     }}

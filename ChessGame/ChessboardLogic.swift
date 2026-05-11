@@ -82,7 +82,19 @@ struct ChessboardLogic {
 
         // Checks if move is legal
         if legalMoves.contains(where: { $0 == to }) {
+            
+            if piece.type == .pawn {
 
+                let promotionRank =
+                    (piece.color == .white && to.0 == 0) ||
+                    (piece.color == .black && to.0 == 7)
+
+                if promotionRank {
+                    pendingPromotion = (from: from, to: to)
+                    return
+                }
+            }
+            
             history.append(board)
 
             // EN PASSANT
