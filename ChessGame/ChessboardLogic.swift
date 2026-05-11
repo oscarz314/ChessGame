@@ -650,6 +650,20 @@ struct ChessboardLogic {
     func opposite(_ color: PieceColor) -> PieceColor {
         return color == .white ? .black : .white
     }
+    
+    func isKingInCheck(color: PieceColor, on targetBoard: Board) -> Bool {
+
+        guard let kingPos = findKing(color: color, on: targetBoard) else {
+            return false
+        }
+
+        return isSquareAttacked(
+            row: kingPos.0,
+            col: kingPos.1,
+            by: opposite(color),
+            on: targetBoard
+        )
+    }
 
 }
 
