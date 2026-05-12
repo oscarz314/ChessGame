@@ -5,232 +5,420 @@
 //  Created by Student on 4/27/26.
 //
 
+//
+//  ChessBoard.swift
+//  ChessGame
+//
+
 import Foundation
 import SwiftUI
 
 struct ChessBoard: View {
-    //Board size 8 by 8
+
     let size = 8
+
     @State private var showingPromotionSelection = false
-    @State private var game = ChessboardLogic()
-    @State private var gameOverMessage: String?
-    
-    //Current piece
-    @State private var selectedPiece: (piece: ChessPiece, row: Int, col: Int)?
+    @StateObject private var game = ChessboardLogic()
+
+    @State private var selectedPiece: (
+        piece: ChessPiece,
+        row: Int,
+        col: Int
+    )?
+
     @State private var dragOffset: CGSize = .zero
-    
+
     var legalMovesForSelected: [(Int, Int)] {
-        guard let selected = selectedPiece else { return [] }
-        let legalMoves = game.isLegal(row: selected.row, col: selected.col, targetBoard: game.board)
-        return game.isCheckSafe(from: (selected.row, selected.col), pseudoMoves: legalMoves)
+
+        guard let selected = selectedPiece else {
+            return []
+        }
+
+        let legalMoves = game.isLegal(
+            row: selected.row,
+            col: selected.col,
+            targetBoard: game.board
+        )
+
+        return game.isCheckSafe(
+            from: (selected.row, selected.col),
+            pseudoMoves: legalMoves
+        )
     }
-    
+
     var body: some View {
+
         VStack {
+
             Text("Current Turn: \(game.currentTurn.rawValue.capitalized)")
-            if let message = gameOverMessage {
-                Text(message)
-                    .font(.title2)
-                    .foregroundColor(.red)
-            }
-            HStack{
-                GeometryReader{ geo in
-                    //Geometry reader used to read the board size and square size relative to the grid
-                    let boardSize = min(geo.size.width, geo.size.height)
+
+            HStack {
+
+                GeometryReader { geo in
+
+                    let boardSize = min(
+                        geo.size.width,
+                        geo.size.height
+                    )
+
                     let squareSize = boardSize / CGFloat(size)
-                    
+
                     ZStack(alignment: .topLeading) {
-                        // Make grid
-                        Grid(horizontalSpacing: 0, verticalSpacing: 0) {
+
+                        // BOARD GRID
+                        Grid(
+                            horizontalSpacing: 0,
+                            verticalSpacing: 0
+                        ) {
+
                             ForEach(0..<size, id: \.self) { row in
+
                                 GridRow {
+
                                     ForEach(0..<size, id: \.self) { column in
-                                                                            
-                                        //check if this square is part of the previous move
+
                                         let lastFrom = game.lastMove?.from
                                         let lastTo = game.lastMove?.to
-                                                                            
-                                        let isLastMove = (row == lastFrom?.0 && column == lastFrom?.1) || (row == lastTo?.0 && column == lastTo?.1)
-                                                                            
+
+                                        let isLastMove =
+                                            (row == lastFrom?.0 && column == lastFrom?.1)
+                                            ||
+                                            (row == lastTo?.0 && column == lastTo?.1)
+
                                         Rectangle()
-                                        // if it's the previous move, use yellow, otherwise use the board pattern
-                                        .fill(isLastMove ? Color.yellow.opacity(0.6) : isDark(row: row, col: column) ? Color.green : Color.white)
-                                        .aspectRatio(1, contentMode: .fit)
-                                        .overlay(
-                                            ZStack {
-                                                //selected square highlight
-                                                if selectedPiece?.row == row && selectedPiece?.col == column {
-                                                    Color.blue.opacity(0.4)
-                                                }
-                                                
-                                                //legal move highlight
-                                                if legalMovesForSelected.contains(where: {$0 == (row,column)}) {
-                                                    if game.board[row][column] != nil {
-                                                        // Capture move → outlined circle
-                                                        Circle()
-                                                            .stroke(Color.black, lineWidth: 4)
-                                                            .padding(6)
-                                                    } else {
-                                                        // Normal move → filled dot
-                                                        Circle()
-                                                            .fill(Color.blue)
-                                                            .frame(width: 20, height: 20)
-                                                
+                                            .fill(
+                                                isLastMove
+                                                ? Color.yellow.opacity(0.6)
+                                                : isDark(row: row, col: column)
+                                                    ? Color.green
+                                                    : Color.white
+                                            )
+                                            .aspectRatio(
+                                                1,
+                                                contentMode: .fit
+                                            )
+                                            .overlay(
+                                                ZStack {
+
+                                                    // SELECTED HIGHLIGHT
+                                                    if selectedPiece?.row == row &&
+                                                        selectedPiece?.col == column {
+
+                                                        Color.blue.opacity(0.4)
+                                                    }
+
+                                                    // LEGAL MOVE HIGHLIGHT
+                                                    if legalMovesForSelected.contains(
+                                                        where: { $0 == (row, column) }
+                                                    ) {
+
+                                                        if game.board[row][column] != nil {
+
+                                                            Circle()
+                                                                .stroke(
+                                                                    Color.black,
+                                                                    lineWidth: 4
+                                                                )
+                                                                .padding(6)
+
+                                                        } else {
+
+                                                            Circle()
+                                                                .fill(Color.blue)
+                                                                .frame(
+                                                                    width: 20,
+                                                                    height: 20
+                                                                )
+                                                        }
                                                     }
                                                 }
-                                            })
-                                        .onTapGesture {
-                                            handleTapMove(row: row, col: column)
-                                        }
-                                        
+                                            )
+                                            .onTapGesture {
+                                                handleTapMove(
+                                                    row: row,
+                                                    col: column
+                                                )
+                                            }
                                     }
                                 }
                             }
-                            
                         }
                         .border(Color.black, width: 2)
-                        
-                        //Pieces
+
+                        // PIECES
                         ForEach(game.activePieces, id: \.piece.id) { item in
-                            let isSelected = selectedPiece?.piece.id == item.piece.id
-                            
+
+                            let isSelected =
+                                selectedPiece?.piece.id == item.piece.id
+
                             Image(item.piece.imageName)
                                 .resizable()
                                 .scaledToFit()
-                                .frame(width: squareSize, height: squareSize)
-                                .zIndex(selectedPiece?.piece.id == item.piece.id ? 1 : 0)
+                                .frame(
+                                    width: squareSize,
+                                    height: squareSize
+                                )
+                                .zIndex(
+                                    selectedPiece?.piece.id == item.piece.id
+                                    ? 1
+                                    : 0
+                                )
                                 .position(
-                                    x: CGFloat(item.col) * squareSize + (squareSize / 2) + (isSelected ? dragOffset.width : 0),
-                                    y: CGFloat(item.row) * squareSize + (squareSize / 2) + (isSelected ? dragOffset.height : 0)
+                                    x: CGFloat(item.col) * squareSize
+                                        + (squareSize / 2)
+                                        + (isSelected
+                                            ? dragOffset.width
+                                            : 0),
+
+                                    y: CGFloat(item.row) * squareSize
+                                        + (squareSize / 2)
+                                        + (isSelected
+                                            ? dragOffset.height
+                                            : 0)
                                 )
                                 .onTapGesture {
-                                    handleTapMove(row: item.row, col: item.col)
+
+                                    handleTapMove(
+                                        row: item.row,
+                                        col: item.col
+                                    )
                                 }
                                 .gesture(
                                     DragGesture()
+
                                         .onChanged { value in
+
                                             if item.piece.color == game.currentTurn {
+
                                                 selectedPiece = item
                                                 dragOffset = value.translation
                                             }
                                         }
+
                                         .onEnded { value in
+
                                             if selectedPiece != nil {
-                                                handleDrop(item: item, translation: value.translation, squareSize: squareSize)
+
+                                                handleDrop(
+                                                    item: item,
+                                                    translation: value.translation,
+                                                    squareSize: squareSize
+                                                )
+
                                                 dragOffset = .zero
                                                 selectedPiece = nil
                                             }
                                         }
                                 )
-                                
                         }
                     }
-                    .frame(width: boardSize, height: boardSize)
+                    .frame(
+                        width: boardSize,
+                        height: boardSize
+                    )
                 }
                 .aspectRatio(1, contentMode: .fit)
                 .padding()
             }
         }
-        .confirmationDialog("Promote Pawn", isPresented: $showingPromotionSelection, titleVisibility: .visible) {
-            Button("Queen") { promote(to: .queen) }
-            Button("Knight") { promote(to: .knight) }
-            Button("Rook") { promote(to: .rook) }
-            Button("Bishop") { promote(to: .bishop) }
-            Button("Cancel", role: .cancel) { game.pendingPromotion = nil }
+
+        .confirmationDialog(
+            "Promote Pawn",
+            isPresented: $showingPromotionSelection,
+            titleVisibility: .visible
+        ) {
+
+            Button("Queen") {
+                promote(to: .queen)
+            }
+
+            Button("Knight") {
+                promote(to: .knight)
+            }
+
+            Button("Rook") {
+                promote(to: .rook)
+            }
+
+            Button("Bishop") {
+                promote(to: .bishop)
+            }
+
+            Button("Cancel", role: .cancel) {
+                game.pendingPromotion = nil
+            }
         }
     }
-        
-        //Decide which square is dark
-        func isDark(row: Int, col: Int) -> Bool {
-            return (row + col) % 2 != 0
+
+    // MARK: - BOARD COLOR
+
+    func isDark(row: Int, col: Int) -> Bool {
+        return (row + col) % 2 != 0
+    }
+
+    // MARK: - HANDLE USER MOVE + BOT MOVE
+
+    func handleUserMove(
+        from: (Int, Int),
+        to: (Int, Int)
+    ) {
+
+        // HUMAN MOVE
+        game.move(from: from, to: to)
+
+        // PROMOTION
+        if game.pendingPromotion != nil {
+            showingPromotionSelection = true
+            return
+        }
+
+        // BOT TURN
+        if game.currentTurn == .black {
+
+            let currentFEN = game.generateFEN()
+            print(currentFEN)
+            ChessNetworkService.shared.fetchBotMove(
+                fen: currentFEN
+            ) { response in
+
+                guard let response = response else {
+                    return
+                }
+
+                let botFrom = game.coordinateFromUCI(response.from)
+                let botTo = game.coordinateFromUCI(response.to)
+
+                DispatchQueue.main.async {
+
+                    game.move(
+                        from: botFrom,
+                        to: botTo
+                    )
+                }
+            }
         }
         
-        //Drag and drop pieces
-    func handleDrop(item: (piece: ChessPiece, row: Int, col: Int),
-                    translation: CGSize,
-                    squareSize: CGFloat) {
-        
-        let colChange = Int((translation.width / squareSize).rounded())
-        let rowChange = Int((translation.height / squareSize).rounded())
-        
+    }
+
+    // MARK: - DRAG DROP
+
+    func handleDrop(
+        item: (
+            piece: ChessPiece,
+            row: Int,
+            col: Int
+        ),
+        translation: CGSize,
+        squareSize: CGFloat
+    ) {
+
+        let colChange = Int(
+            (translation.width / squareSize).rounded()
+        )
+
+        let rowChange = Int(
+            (translation.height / squareSize).rounded()
+        )
+
         let newRow = item.row + rowChange
         let newCol = item.col + colChange
-        
-        guard (0..<8).contains(newRow), (0..<8).contains(newCol),
-              (newRow != item.row || newCol != item.col) else {
+
+        guard (0..<8).contains(newRow),
+              (0..<8).contains(newCol),
+              (newRow != item.row || newCol != item.col)
+        else {
+
             dragOffset = .zero
             return
         }
-        
-        game.move(from: (item.row, item.col), to: (newRow, newCol))
-        
-        if game.isCheckmate(color: game.currentTurn) {
 
-            let winner = (game.currentTurn == .white)
-                ? "Black"
-                : "White"
+        handleUserMove(
+            from: (item.row, item.col),
+            to: (newRow, newCol)
+        )
 
-            gameOverMessage = "\(winner) wins by checkmate!"
-        }
-        
-        if game.pendingPromotion != nil {
-            showingPromotionSelection = true
-        }
-        
         dragOffset = .zero
         selectedPiece = nil
     }
-    
+
+    // MARK: - TAP MOVE
+
     func handleTapMove(row: Int, col: Int) {
+
         guard let selected = selectedPiece else {
-            if let piece = game.board[row][col], piece.color == game.currentTurn {
-                selectedPiece = (piece, row, col)
+
+            if let piece = game.board[row][col],
+               piece.color == game.currentTurn {
+
+                selectedPiece = (
+                    piece,
+                    row,
+                    col
+                )
             }
+
             return
         }
-        
-        let from = (selected.row, selected.col)
+
+        let from = (
+            selected.row,
+            selected.col
+        )
+
         let to = (row, col)
-        
-        // Check if it's a legal move
-        let pseudoMoves = game.isLegal(row: selected.row, col: selected.col, targetBoard: game.board)
-        let legalMoves = game.isCheckSafe(from: from, pseudoMoves: pseudoMoves)
-        guard legalMoves.contains(where: { $0 == to }) else {
-            // Tap on own piece → switch selection
-            if let newPiece = game.board[row][col], newPiece.color == game.currentTurn {
-                selectedPiece = (newPiece, row, col)
+
+        let pseudoMoves = game.isLegal(
+            row: selected.row,
+            col: selected.col,
+            targetBoard: game.board
+        )
+
+        let legalMoves = game.isCheckSafe(
+            from: from,
+            pseudoMoves: pseudoMoves
+        )
+
+        guard legalMoves.contains(
+            where: { $0 == to }
+        ) else {
+
+            if let newPiece = game.board[row][col],
+               newPiece.color == game.currentTurn {
+
+                selectedPiece = (
+                    newPiece,
+                    row,
+                    col
+                )
+
             } else {
+
                 selectedPiece = nil
             }
+
             return
         }
-        
-        // Promotion?
-        game.move(from: from, to: to)
-        
-        if game.isCheckmate(color: game.currentTurn) {
 
-            let winner = (game.currentTurn == .white)
-                ? "Black"
-                : "White"
-
-            gameOverMessage = "\(winner) wins by checkmate!"
-        }
-
-        if game.pendingPromotion != nil {
-            showingPromotionSelection = true
-        }
+        handleUserMove(
+            from: from,
+            to: to
+        )
 
         selectedPiece = nil
     }
-    
+
+    // MARK: - PROMOTION
+
     func promote(to type: PieceType) {
+
         game.promotePendingPawn(to: type)
-        
+
         selectedPiece = nil
         showingPromotionSelection = false
-    }}
+    }
+}
 
 #Preview {
     ChessBoard()
 }
+

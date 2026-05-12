@@ -7,7 +7,7 @@
 	objects = {
 
 /* Begin PBXFileReference section */
-		3F828C582F9BF136008C4E24 /* ChessGame.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; name = ChessGame.app; path = "/Users/student/Desktop/Zhang_PD_9/ChessGame/build/Debug-iphoneos/ChessGame.app"; sourceTree = "<absolute>"; };
+		3F9CBDB42FB3A6B900CCE9B9 /* ChessGame.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = ChessGame.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
@@ -33,6 +33,7 @@
 			isa = PBXGroup;
 			children = (
 				3F828C5A2F9BF136008C4E24 /* ChessGame */,
+				3F9CBDB42FB3A6B900CCE9B9 /* ChessGame.app */,
 			);
 			sourceTree = "<group>";
 		};
@@ -58,7 +59,7 @@
 			packageProductDependencies = (
 			);
 			productName = ChessGame;
-			productReference = 3F828C582F9BF136008C4E24 /* ChessGame.app */;
+			productReference = 3F9CBDB42FB3A6B900CCE9B9 /* ChessGame.app */;
 			productType = "com.apple.product-type.application";
 		};
 /* End PBXNativeTarget section */
