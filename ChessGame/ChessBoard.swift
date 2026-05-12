@@ -13,6 +13,7 @@ struct ChessBoard: View {
     let size = 8
     @State private var showingPromotionSelection = false
     @State private var game = ChessboardLogic()
+    @State private var gameOverMessage: String?
     
     //Current piece
     @State private var selectedPiece: (piece: ChessPiece, row: Int, col: Int)?
@@ -27,6 +28,11 @@ struct ChessBoard: View {
     var body: some View {
         VStack {
             Text("Current Turn: \(game.currentTurn.rawValue.capitalized)")
+            if let message = gameOverMessage {
+                Text(message)
+                    .font(.title2)
+                    .foregroundColor(.red)
+            }
             HStack{
                 GeometryReader{ geo in
                     //Geometry reader used to read the board size and square size relative to the grid
@@ -158,6 +164,15 @@ struct ChessBoard: View {
         
         game.move(from: (item.row, item.col), to: (newRow, newCol))
         
+        if game.isCheckmate(color: game.currentTurn) {
+
+            let winner = (game.currentTurn == .white)
+                ? "Black"
+                : "White"
+
+            gameOverMessage = "\(winner) wins by checkmate!"
+        }
+        
         if game.pendingPromotion != nil {
             showingPromotionSelection = true
         }
@@ -192,6 +207,15 @@ struct ChessBoard: View {
         
         // Promotion?
         game.move(from: from, to: to)
+        
+        if game.isCheckmate(color: game.currentTurn) {
+
+            let winner = (game.currentTurn == .white)
+                ? "Black"
+                : "White"
+
+            gameOverMessage = "\(winner) wins by checkmate!"
+        }
 
         if game.pendingPromotion != nil {
             showingPromotionSelection = true
