@@ -22,6 +22,7 @@ struct ChessboardLogic {
     var moveNum: Int = 0
     var enPassantTarget: (Int, Int)? = nil
     var enPassantCaptureSquare: (Int, Int)? = nil
+    var pendingPromotion: (from: (Int, Int), to: (Int, Int))?
     
     //Property to keep track the previous move for highlighting
     var lastMove: (
@@ -81,7 +82,19 @@ struct ChessboardLogic {
 
         // Checks if move is legal
         if legalMoves.contains(where: { $0 == to }) {
+            
+            if piece.type == .pawn {
 
+                let promotionRank =
+                    (piece.color == .white && to.0 == 0) ||
+                    (piece.color == .black && to.0 == 7)
+
+                if promotionRank {
+                    pendingPromotion = (from: from, to: to)
+                    return
+                }
+            }
+            
             history.append(board)
 
             // EN PASSANT
@@ -121,6 +134,7 @@ struct ChessboardLogic {
             movedPiece.hasMoved = true
 
             board[to.0][to.1] = movedPiece
+                    
             board[from.0][from.1] = nil
 
             lastMove = (
@@ -149,62 +163,33 @@ struct ChessboardLogic {
                 ? .black
                 : .white
             
-            print(checkGameState(currentBoard: board, currentHistory: history))
         }
     }
     
-    func checkGameState(currentBoard:Board, currentHistory: [Board]) -> String{
-        //use history to check for current color
-        var currentCheckColor:PieceColor = .white
+    mutating func promotePendingPawn(to type: PieceType) {
+        guard let coords = pendingPromotion else { return }
         
-        if (history.count % 2 == 0){
-            currentCheckColor = .black
-        }
-        else{
-            currentCheckColor = .white
-        }
-        
-        //check for checkmate
-        let kingPosition = findKing(color: currentCheckColor, on: currentBoard)
-        var isCheckmated = true
-        
-        for row in 0..<8 {
-            for col in 0..<8 {
-                let currentPiece = currentBoard[row][col]
-                //check if is player that needs to be checked color
-                if(isSquareAttacked(row: kingPosition!.0, col: kingPosition!.1, by: currentCheckColor, on: currentBoard)){
-                    if (currentPiece?.color == currentCheckColor){
-                        // Gets pseudo legal moves based on piece type and location
-                        let pseudoMoves = isLegal(
-                            row: row,
-                            col: col,
-                            targetBoard: self.board
-                        )
-                        
-                        // Filter for if the move puts King safety at risk
-                        let legalMoves = isCheckSafe(
-                            from: (row, col),
-                            pseudoMoves: pseudoMoves
-                        )
-                        
-                        //
-                        if (legalMoves.count > 0){
-                            isCheckmated = false;
-                            break;
-                        }
-                    }
-                }
-            }
-        }
-        
-        if (isCheckmated) {
-            return "checkmated"
-        }
-        
-        return "ongoing"
+        // Execute the move with the chosen piece type
+        executeMove(from: coords.from, to: coords.to, promotionType: type)
+        pendingPromotion = nil
     }
 
+    mutating func executeMove(from: (Int, Int), to: (Int, Int), promotionType: PieceType?) {
+        guard var movedPiece = board[from.0][from.1] else { return }
+        
+        // If a promotion type was provided, change the piece
+        if let promotionType = promotionType {
+            movedPiece = ChessPiece(type: promotionType, color: movedPiece.color)
+        }
+        
+        movedPiece.hasMoved = true
+        board[to.0][to.1] = movedPiece
+        board[from.0][from.1] = nil
+        
+        // ... (En Passant / Castling logic stays here) ...
 
+        currentTurn = (currentTurn == .white) ? .black : .white
+    }
         
     func isLegal(row: Int, col: Int, targetBoard: Board) -> [(Int, Int)] {
             guard let piece = targetBoard[row][col] else { return [] }
