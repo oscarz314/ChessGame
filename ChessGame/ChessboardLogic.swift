@@ -146,15 +146,39 @@ class ChessboardLogic: ObservableObject {
             // Set en passant target
             if piece.type == .pawn && abs(to.0 - from.0) == 2 {
 
-                // square pawn passes through
-                enPassantTarget = (
+                let targetSquare = (
                     (from.0 + to.0) / 2,
                     from.1
                 )
 
-                // square of pawn that can be captured via en passant
-                enPassantCaptureSquare = to
+                let enemyColor = opposite(piece.color)
+
+                var canBeCaptured = false
+
+                // Check left/right adjacent squares for enemy pawns
+                for dCol in [-1, 1] {
+
+                    let adjacentCol = to.1 + dCol
+
+                    if (0..<8).contains(adjacentCol),
+                       let adjacentPiece = board[to.0][adjacentCol],
+                       adjacentPiece.type == .pawn,
+                       adjacentPiece.color == enemyColor {
+
+                        canBeCaptured = true
+                    }
+                }
+
+                if canBeCaptured {
+                    enPassantTarget = targetSquare
+                    enPassantCaptureSquare = to
+                } else {
+                    enPassantTarget = nil
+                    enPassantCaptureSquare = nil
+                }
+
             } else {
+
                 enPassantTarget = nil
                 enPassantCaptureSquare = nil
             }
@@ -784,24 +808,48 @@ class ChessboardLogic: ObservableObject {
         return piece.color == .white ? char.uppercased() : char.lowercased()
     }
     
-    func executeBotMove(fromUCI: String, toUCI: String, promotion: String?) {
+    func executeBotMove(
+        fromUCI: String,
+        toUCI: String,
+        promotion: String?
+    ) {
+
         let from = coordinateFromUCI(fromUCI)
         let to = coordinateFromUCI(toUCI)
-        
-        // Determine the piece type if it's a promotion
-        var promotionType: PieceType? = nil
-        if let p = promotion {
-            switch p {
-            case "q": promotionType = .queen
-            case "r": promotionType = .rook
-            case "b": promotionType = .bishop
-            case "n": promotionType = .knight
-            default: promotionType = .queen
+
+        // Promotion move
+        if let promotion = promotion {
+
+            let type: PieceType
+
+            switch promotion.lowercased() {
+
+            case "q":
+                type = .queen
+
+            case "r":
+                type = .rook
+
+            case "b":
+                type = .bishop
+
+            case "n":
+                type = .knight
+
+            default:
+                type = .queen
             }
+
+            moveAndPromote(
+                from: from,
+                to: to,
+                promoteTo: type
+            )
+
+        } else {
+
+            move(from: from, to: to)
         }
-        
-        // Use your existing executeMove function
-        executeMove(from: from, to: to, promotionType: promotionType)
     }
 }
 

@@ -254,33 +254,57 @@ struct ChessBoard: View {
         return (row + col) % 2 != 0
     }
 
-    func handleUserMove(from: (Int, Int), to: (Int, Int)) {
-        // 1. Execute the Human Move
+    func handleUserMove(
+        from: (Int, Int),
+        to: (Int, Int)
+    ) {
+
+        // Execute player's move
         game.move(from: from, to: to)
 
-        // 2. Check for Human Promotion
+        // Promotion UI for human player
         if game.pendingPromotion != nil {
+
             showingPromotionSelection = true
             return
         }
 
-        // 3. Trigger the Bot
+        // If turn switched to black, ask bot for move
         if game.currentTurn == .black {
+
             let currentFEN = game.generateFEN()
-            
-            ChessNetworkService.shared.fetchBotMove(fen: currentFEN) { response in
+
+            print("FEN:", currentFEN)
+
+            ChessNetworkService.shared.fetchBotMove(
+                fen: currentFEN
+            ) { response in
+
                 guard let response = response else {
+
                     print("Bot failed to respond")
                     return
                 }
 
-                // Execute the move on the main thread
                 DispatchQueue.main.async {
+
+                    // Extract promotion piece from move string
+                    var promotionPiece: String? = nil
+
+                    if let move = response.move,
+                       move.count == 5 {
+
+                        promotionPiece = String(move.last!)
+                    }
+
                     game.executeBotMove(
                         fromUCI: response.from,
                         toUCI: response.to,
-                        promotion: response.promotion
+                        promotion: promotionPiece
                     )
+
+                    // Optional debugging
+                    print("Bot Move: \(response.from) -> \(response.to)")
                 }
             }
         }
