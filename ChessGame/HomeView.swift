@@ -8,7 +8,11 @@
 import SwiftUI
 
 struct HomeView: View {
+    @State private var botLevel: Int = 5
+    @State private var botLevelText: String = "5"
+    
     var body: some View {
+        
         NavigationStack {
             ZStack {
                 // Background Color
@@ -32,10 +36,45 @@ struct HomeView: View {
                     
                     Spacer()
                     
+                    //Bot level
+                    VStack(spacing: 10) {
+                        Text("Bot Level (1 - 20)")
+                            .font(.headline)
+                        
+                        TextField("Enter bot level", text: $botLevelText)
+                            .keyboardType(.numberPad)
+                            .textFieldStyle(.roundedBorder)
+                            .frame(width: 200)
+                            .multilineTextAlignment(.center)
+                            .onChange(of: botLevelText) { _, newValue in // iOS 17+ signature used here
+                                // 1. Keep only numbers
+                                let filtered = newValue.filter { $0.isNumber }
+                                
+                                // 2. Validate and Clamp
+                                if let value = Int(filtered) {
+                                    let clamped = min(max(value, 1), 20)
+                                    
+                                    // Only update if it actually changed to avoid infinite loop
+                                    if String(clamped) != newValue {
+                                        botLevel = clamped
+                                        botLevelText = String(clamped)
+                                    } else {
+                                        botLevel = clamped
+                                    }
+                                } else if filtered.isEmpty {
+                                    // Handle empty case, e.g., set to 1 or leave empty
+                                    botLevel = 1
+                                } else {
+                                    // If filtered resulted in non-empty but invalid Int (unlikely with .isNumber)
+                                    botLevelText = filtered
+                                }
+                            }
+                    }
+                    
                     // Start Button
                     NavigationLink {
                         // This opens your existing ChessBoard file
-                        ChessBoard()
+                        ChessBoard(botLevel: botLevel)
                             .navigationBarTitleDisplayMode(.inline)
                     } label: {
                         Text("Start Game")
@@ -46,10 +85,6 @@ struct HomeView: View {
                             .cornerRadius(12)
                             .shadow(radius: 5)
                     }
-                    
-                    Text("Play against Level 3 Bot")
-                        .font(.subheadline)
-                        .foregroundColor(.secondary)
                     
                     Spacer()
                 }

@@ -35,11 +35,11 @@ struct ChessAPIResponse: Codable {
 class ChessNetworkService {
 
     static let shared = ChessNetworkService()
-
     private let apiURL = URL(string: "https://chess-api.com/v1")!
 
     func fetchBotMove(
         fen: String,
+        botLevel: Int,
         completion: @escaping (ChessAPIResponse?) -> Void
     ) {
 
@@ -54,7 +54,7 @@ class ChessNetworkService {
 
         let body: [String: Any] = [
             "fen": fen,
-            "depth": 12
+            "depth": botLevel
         ]
 
         do {

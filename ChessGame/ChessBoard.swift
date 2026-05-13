@@ -16,6 +16,7 @@ import SwiftUI
 struct ChessBoard: View {
 
     let size = 8
+    let botLevel: Int
 
     @State private var showingPromotionSelection = false
     @StateObject private var game = ChessboardLogic()
@@ -277,7 +278,8 @@ struct ChessBoard: View {
             print("FEN:", currentFEN)
 
             ChessNetworkService.shared.fetchBotMove(
-                fen: currentFEN
+                fen: currentFEN,
+                botLevel: botLevel
             ) { response in
 
                 guard let response = response else {
@@ -351,8 +353,6 @@ struct ChessBoard: View {
         dragOffset = .zero
         selectedPiece = nil
     }
-
-    // MARK: - TAP MOVE
 
     func handleTapMove(row: Int, col: Int) {
 
@@ -430,6 +430,6 @@ struct ChessBoard: View {
 }
 
 #Preview {
-    ChessBoard()
+    ChessBoard(botLevel: 3)
 }
 
