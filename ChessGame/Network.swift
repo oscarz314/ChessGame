@@ -10,23 +10,25 @@ import Foundation
 struct ChessAPIResponse: Codable {
     let from: String
     let to: String
-    let fen: String // The board after the AI moves
-    let move: String // e.g., "e7e5"
+    let san: String?        // Algebraic notation (e.g., "Nf3")
+    let promotion: String?  // "q", "r", "b", "n"
 }
 
 class ChessNetworkService {
     static let shared = ChessNetworkService()
-    private let apiURL = URL(string: "https://chess-api.com/v1/play")!
+    
+    // Updated to the correct base URL
+    private let apiURL = URL(string: "https://chess-api.com/v1")!
     
     func fetchBotMove(fen: String, completion: @escaping (ChessAPIResponse?) -> Void) {
         var request = URLRequest(url: apiURL)
         request.httpMethod = "POST"
         request.addValue("application/json", forHTTPHeaderField: "Content-Type")
         
-        // Settings: You can change the 'level' here
+        // Ensure level is an Int (3) rather than a String ("3")
         let body: [String: Any] = [
             "fen": fen,
-            "level": "3"
+            "level": 3
         ]
         
         request.httpBody = try? JSONSerialization.data(withJSONObject: body)
@@ -37,14 +39,14 @@ class ChessNetworkService {
                 return
             }
             
-            print(String(data: data, encoding: .utf8) ?? "No response")
-
-            let response = try? JSONDecoder().decode(
-                ChessAPIResponse.self,
-                from: data
-            )
-            DispatchQueue.main.async {
-                completion(response)
+            do {
+                let response = try JSONDecoder().decode(ChessAPIResponse.self, from: data)
+                DispatchQueue.main.async {
+                    completion(response)
+                }
+            } catch {
+                print("Decoding Error: \(error)")
+                completion(nil)
             }
         }.resume()
     }

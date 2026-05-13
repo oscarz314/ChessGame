@@ -784,7 +784,24 @@ class ChessboardLogic: ObservableObject {
         return piece.color == .white ? char.uppercased() : char.lowercased()
     }
     
-    
-
+    func executeBotMove(fromUCI: String, toUCI: String, promotion: String?) {
+        let from = coordinateFromUCI(fromUCI)
+        let to = coordinateFromUCI(toUCI)
+        
+        // Determine the piece type if it's a promotion
+        var promotionType: PieceType? = nil
+        if let p = promotion {
+            switch p {
+            case "q": promotionType = .queen
+            case "r": promotionType = .rook
+            case "b": promotionType = .bishop
+            case "n": promotionType = .knight
+            default: promotionType = .queen
+            }
+        }
+        
+        // Use your existing executeMove function
+        executeMove(from: from, to: to, promotionType: promotionType)
+    }
 }
 
