@@ -10,6 +10,7 @@ import SwiftUI
 struct HomeView: View {
     @State private var botLevel: Int = 5
     @State private var botLevelText: String = "5"
+    @State private var isPressed = false
     
     var body: some View {
         
@@ -27,6 +28,13 @@ struct HomeView: View {
                             .scaledToFit()
                             .frame(width: 80, height: 80)
                             .foregroundColor(.yellow)
+                            .scaleEffect(isPressed ? 1.2 : 1.0)
+                            .animation(.easeInOut(duration: 0.2), value: isPressed)
+                            .gesture(
+                                DragGesture(minimumDistance: 0)
+                                    .onChanged { _ in isPressed = true }
+                                    .onEnded { _ in isPressed = false }
+                            )
                         
                         Text("Swift Chess")
                             .font(.largeTitle)
