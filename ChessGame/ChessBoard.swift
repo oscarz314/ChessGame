@@ -26,7 +26,8 @@ struct ChessBoard: View {
         row: Int,
         col: Int
     )?
-
+    
+    @State private var checkmateAnimationTrigger = false
     @State private var dragOffset: CGSize = .zero
 
     var legalMovesForSelected: [(Int, Int)] {
@@ -52,7 +53,24 @@ struct ChessBoard: View {
         VStack {
 
             Text("Current Turn: \(game.currentTurn.rawValue.capitalized)")
-
+            
+            if !game.gameState.isEmpty {
+                Text(game.gameState)
+                    .font(.title)
+                    .fontWeight(.bold)
+                    .foregroundColor(
+                        game.gameState == "Checkmate"
+                        ? .red
+                        : .orange
+                    )
+                    .padding(.horizontal, 20)
+                    .padding(.vertical, 8)
+                    .background(
+                RoundedRectangle(cornerRadius: 12)
+                    .fill(Color.black.opacity(0.1))
+                )
+            }
+            
             HStack {
 
                 GeometryReader { geo in
@@ -151,6 +169,8 @@ struct ChessBoard: View {
 
                             let isSelected =
                                 selectedPiece?.piece.id == item.piece.id
+                            let isKing = item.piece.type == .king
+                            let isCheckmate = game.gameState == "Checkmate"
 
                             Image(item.piece.imageName)
                                 .resizable()
@@ -158,6 +178,17 @@ struct ChessBoard: View {
                                 .frame(
                                     width: squareSize,
                                     height: squareSize
+                                )
+                                .rotationEffect(
+                                        (isKing && isCheckmate && checkmateAnimationTrigger)
+                                        ? Angle.degrees(360)
+                                        : Angle.degrees(0)
+                                    )
+                                .animation(
+                                    isKing && isCheckmate
+                                    ? .linear(duration: 1.2).repeatForever(autoreverses: false)
+                                    : .default,
+                                    value: checkmateAnimationTrigger
                                 )
                                 .zIndex(
                                     selectedPiece?.piece.id == item.piece.id
@@ -222,7 +253,16 @@ struct ChessBoard: View {
                 .padding()
             }
         }
-
+        .onChange(of: game.gameState) { _, newValue in
+                if newValue == "Checkmate" {
+                    withAnimation(.linear(duration: 1.2).repeatForever(autoreverses: false)) {
+                        checkmateAnimationTrigger = true
+                    }
+                } else {
+                    checkmateAnimationTrigger = false
+                }
+            }
+        
         .confirmationDialog(
             "Promote Pawn",
             isPresented: $showingPromotionSelection,
@@ -270,9 +310,6 @@ struct ChessBoard: View {
             return
         }
         
-        if(game.isCheckmate(color: .black)){
-            print("Bot got checkmated")
-        }
 
         // If turn switched to black, ask bot for move
         if game.currentTurn == .black {
@@ -308,13 +345,12 @@ struct ChessBoard: View {
                         toUCI: response.to,
                         promotion: promotionPiece
                     )
+                    
+                    game.evaluateGameState()
 
                     // Optional debugging
                     print("Bot Move: \(response.from) -> \(response.to)")
                 }
-            }
-            if(game.isCheckmate(color: .white)){
-                print("White got checkmated")
             }
         }
     }

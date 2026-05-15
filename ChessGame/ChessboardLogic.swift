@@ -16,6 +16,8 @@ class ChessboardLogic: ObservableObject {
         repeating: Array(repeating: nil, count: 8),
         count: 8
     )
+    @Published var gameState: String = ""
+    @Published var gameOver: Bool = false
     
     var currentTurn: PieceColor = .white
     var history: [Board] = []
@@ -49,6 +51,7 @@ class ChessboardLogic: ObservableObject {
     }
     
     func setupBoard() {
+        
         let backRow: [PieceType] = [
             .rook, .knight, .bishop, .queen,
             .king, .bishop, .knight, .rook
@@ -63,7 +66,9 @@ class ChessboardLogic: ObservableObject {
     }
     
     func move(from: (Int, Int), to: (Int, Int)) {
-
+        
+        if gameOver { return }
+        
         guard let piece = board[from.0][from.1],
               piece.color == currentTurn else { return }
 
@@ -214,9 +219,30 @@ class ChessboardLogic: ObservableObject {
         
         // ... (En Passant / Castling logic stays here) ...
 
-        currentTurn = (currentTurn == .white) ? .black : .white
-    }
+         currentTurn = opposite(currentTurn)
+
+         evaluateGameState()
+     }
         
+    
+    func evaluateGameState() {
+        if isCheckmate(color: currentTurn) {
+            gameState = "Checkmate"
+            gameOver = true
+        } else if isStalemate(color: currentTurn) {
+            gameState = "Stalemate"
+            gameOver = true
+        } else if isKingInCheck(
+            color: currentTurn,
+            on: board
+        ) {
+            gameState = "Check"
+            gameOver = false
+        } else {
+            gameState = ""
+            gameOver = false
+        }
+    }
     
      func moveAndPromote(from: (Int, Int), to: (Int, Int), promoteTo: PieceType) {
 
@@ -246,7 +272,10 @@ class ChessboardLogic: ObservableObject {
         board[to.0][to.1] = promotedPiece
         board[from.0][from.1] = nil
 
-        currentTurn = (currentTurn == .white) ? .black : .white
+         
+        currentTurn = opposite(currentTurn)
+         
+        evaluateGameState()
     }
 }
 

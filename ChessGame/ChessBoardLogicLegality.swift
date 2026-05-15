@@ -65,7 +65,10 @@ extension ChessboardLogic {
                     tempBoard[from.0][0] = nil
                 }
             }
-
+            
+            var movedPiece = piece
+            movedPiece.hasMoved = true
+            
             tempBoard[move.0][move.1] = piece
             tempBoard[from.0][from.1] = nil
 
@@ -315,7 +318,7 @@ extension ChessboardLogic {
                targetBoard[row][6] == nil {
 
                 // King cannot castle through check
-                if !isSquareAttacked(row: row, col: 4, by: enemyColor, on: targetBoard) &&
+                if !isSquareAttacked(row: row, col: col, by: enemyColor, on: targetBoard) &&
                    !isSquareAttacked(row: row, col: 5, by: enemyColor, on: targetBoard) &&
                    !isSquareAttacked(row: row, col: 6, by: enemyColor, on: targetBoard) {
 
@@ -333,7 +336,7 @@ extension ChessboardLogic {
                targetBoard[row][3] == nil {
 
                 // King cannot castle through check
-                if !isSquareAttacked(row: row, col: 4, by: enemyColor, on: targetBoard) &&
+                if !isSquareAttacked(row: row, col: col, by: enemyColor, on: targetBoard) &&
                    !isSquareAttacked(row: row, col: 3, by: enemyColor, on: targetBoard) &&
                    !isSquareAttacked(row: row, col: 2, by: enemyColor, on: targetBoard) {
 

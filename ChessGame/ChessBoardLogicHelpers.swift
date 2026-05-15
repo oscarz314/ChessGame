@@ -143,4 +143,9 @@ extension ChessboardLogic {
         return isKingInCheck(color: color, on: board)
             && !hasAnyLegalMoves(color: color)
     }
+    
+    func isStalemate(color: PieceColor) -> Bool {
+        return !isKingInCheck(color: color, on: board)
+                && !hasAnyLegalMoves(color: color)
+    }
 }
