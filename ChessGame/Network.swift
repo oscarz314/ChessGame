@@ -7,8 +7,6 @@
 
 import Foundation
 
-// MARK: - API Response
-
 struct ChessAPIResponse: Codable {
 
     let from: String
@@ -30,7 +28,6 @@ struct ChessAPIResponse: Codable {
     let eval: Double?
 }
 
-// MARK: - Network Service
 
 class ChessNetworkService {
 

@@ -269,6 +269,10 @@ struct ChessBoard: View {
             showingPromotionSelection = true
             return
         }
+        
+        if(game.isCheckmate(color: .black)){
+            print("Bot got checkmated")
+        }
 
         // If turn switched to black, ask bot for move
         if game.currentTurn == .black {
@@ -309,11 +313,11 @@ struct ChessBoard: View {
                     print("Bot Move: \(response.from) -> \(response.to)")
                 }
             }
+            if(game.isCheckmate(color: .white)){
+                print("White got checkmated")
+            }
         }
     }
-
-
-    // MARK: - DRAG DROP
 
     func handleDrop(
         item: (
@@ -417,8 +421,6 @@ struct ChessBoard: View {
 
         selectedPiece = nil
     }
-
-    // MARK: - PROMOTION
 
     func promote(to type: PieceType) {
 

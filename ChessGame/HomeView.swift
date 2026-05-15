@@ -38,7 +38,7 @@ struct HomeView: View {
                     
                     //Bot level
                     VStack(spacing: 10) {
-                        Text("Bot Level (1 - 20)")
+                        Text("Bot Analysis Depth (1 - 20)")
                             .font(.headline)
                         
                         TextField("Enter bot level", text: $botLevelText)
@@ -46,11 +46,11 @@ struct HomeView: View {
                             .textFieldStyle(.roundedBorder)
                             .frame(width: 200)
                             .multilineTextAlignment(.center)
-                            .onChange(of: botLevelText) { _, newValue in // iOS 17+ signature used here
-                                // 1. Keep only numbers
+                            .onChange(of: botLevelText) { _, newValue in
+                                // Format numbers
                                 let filtered = newValue.filter { $0.isNumber }
                                 
-                                // 2. Validate and Clamp
+                                // Validate and Clamp
                                 if let value = Int(filtered) {
                                     let clamped = min(max(value, 1), 20)
                                     
