@@ -29,6 +29,8 @@ struct ChessBoard: View {
     
     @State private var checkmateAnimationTrigger = false
     @State private var dragOffset: CGSize = .zero
+    
+    @AppStorage("losses") private var losses = 0
 
     var legalMovesForSelected: [(Int, Int)] {
 
@@ -51,7 +53,7 @@ struct ChessBoard: View {
     var body: some View {
 
         VStack {
-
+            
             Text("Current Turn: \(game.currentTurn.rawValue.capitalized)")
             
             if !game.gameState.isEmpty {
@@ -255,6 +257,9 @@ struct ChessBoard: View {
         }
         .onChange(of: game.gameState) { _, newValue in
                 if newValue == "Checkmate" {
+                    if game.currentTurn == .white {
+                        losses += 1
+                    }
                     withAnimation(.linear(duration: 1.2).repeatForever(autoreverses: false)) {
                         checkmateAnimationTrigger = true
                     }

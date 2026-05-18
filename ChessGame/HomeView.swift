@@ -12,6 +12,8 @@ struct HomeView: View {
     @State private var botLevelText: String = "5"
     @State private var isPressed = false
     
+    @AppStorage("losses") private var losses = 0
+    
     var body: some View {
         
         NavigationStack {
@@ -39,6 +41,10 @@ struct HomeView: View {
                         Text("Swift Chess")
                             .font(.largeTitle)
                             .fontWeight(.bold)
+                        
+                        Text("Losses: \(losses)")
+                            .font(.title3)
+                            .foregroundColor(.secondary)
                     }
                     .padding(.top, 50)
                     
