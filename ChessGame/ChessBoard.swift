@@ -17,6 +17,7 @@ struct ChessBoard: View {
 
     let size = 8
     let botLevel: Int
+    @State private var isBotEnabled = false
 
     @State private var showingPromotionSelection = false
     @StateObject private var game = ChessboardLogic()
@@ -268,6 +269,14 @@ struct ChessBoard: View {
                 }
             }
         
+        Button(isBotEnabled ? "Turn Bot Off" : "Turn Bot On") {
+            isBotEnabled.toggle()
+        }
+        .padding()
+        .background(isBotEnabled ? Color.red : Color.green)
+        .foregroundColor(.white)
+        .cornerRadius(10)
+        
         .confirmationDialog(
             "Promote Pawn",
             isPresented: $showingPromotionSelection,
@@ -315,9 +324,8 @@ struct ChessBoard: View {
             return
         }
         
-
-        // If turn switched to black, ask bot for move
-        if game.currentTurn == .black {
+        // If turn switched to black and bot is enabled, ask bot for move
+        if game.currentTurn == .black && isBotEnabled {
 
             let currentFEN = game.generateFEN()
 
@@ -350,10 +358,9 @@ struct ChessBoard: View {
                         toUCI: response.to,
                         promotion: promotionPiece
                     )
-                    
+
                     game.evaluateGameState()
 
-                    // Optional debugging
                     print("Bot Move: \(response.from) -> \(response.to)")
                 }
             }
